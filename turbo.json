@@ -1,28 +1,62 @@
 {
   "$schema": "https://turborepo.com/schema.json",
-  "globalDependencies": [".env.example", "tsconfig.json"],
+  "globalDependencies": [
+    ".env.example",
+    "tsconfig.json"
+  ],
   "tasks": {
     "dev": {
       "cache": false,
       "persistent": true,
-      "env": ["API_PORT", "NEXT_PUBLIC_API_URL", "NODE_ENV"]
+      "env": [
+        "API_PORT",
+        "FRONTEND_URL",
+        "NEXT_PUBLIC_API_URL",
+        "NODE_ENV"
+      ]
     },
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
-      "env": ["NEXT_PUBLIC_API_URL", "NODE_ENV"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "dist/**"
+      ],
+      "env": [
+        "NEXT_PUBLIC_API_URL",
+        "NODE_ENV"
+      ]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": [
+        "^lint"
+      ]
     },
     "typecheck": {
-      "dependsOn": ["^typecheck"],
-      "outputs": ["*.tsbuildinfo", "dist/tsconfig.tsbuildinfo"]
+      "dependsOn": [
+        "^typecheck"
+      ],
+      "outputs": [
+        "*.tsbuildinfo",
+        "dist/tsconfig.tsbuildinfo"
+      ]
     },
     "test": {
-      "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "dependsOn": [
+        "build"
+      ],
+      "outputs": [],
+      "env": [
+        "API_PORT",
+        "FRONTEND_URL",
+        "NODE_ENV"
+      ]
     }
   }
 }

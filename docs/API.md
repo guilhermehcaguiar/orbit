@@ -2,7 +2,40 @@
 
 Base: `/api/v1`
 
-## Convenções
+## Implementado na etapa 3A
+
+`GET /api/v1/health` retorna HTTP 200:
+
+```json
+{
+  "status": "ok",
+  "service": "orbit-api",
+  "environment": "development"
+}
+```
+
+O ambiente vem de `NODE_ENV` validado. O CORS usa `FRONTEND_URL`. DTOs futuros
+passam pela validação global. O formato atual de erro é:
+
+```json
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Invalid input",
+  "path": "/api/v1/...",
+  "timestamp": "2026-10-06T12:00:00.000Z"
+}
+```
+
+`message` também pode ser uma lista de mensagens de validação. Falhas internas
+recebem mensagem genérica, sem stack trace. Não há endpoints de negócio.
+
+## Planejamento futuro
+
+As convenções e rotas abaixo são referências para próximas etapas, não contratos
+implementados. Os caminhos são relativos a `/api/v1`.
+
+### Convenções
 - JSON.
 - datas ISO 8601.
 - autenticação Bearer JWT.
@@ -10,10 +43,10 @@ Base: `/api/v1`
 - paginação por cursor nas coleções grandes.
 - idempotency key em operações críticas futuras.
 
-## Endpoints
+## Endpoints planejados
 
 ### System
-- `GET /health`
+- `GET /health` (já implementado)
 - `GET /ready`
 
 ### Me
@@ -80,7 +113,7 @@ Base: `/api/v1`
 - `GET /analytics/dashboard`
 - `GET /analytics/study?from=&to=`
 
-## Error example
+## Exemplo futuro de erro (não implementado)
 
 ```json
 {

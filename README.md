@@ -22,14 +22,15 @@ npm run dev
 ```
 
 - Frontend: http://localhost:3000
-- API: http://localhost:3001/health
+- API: http://localhost:3001/api/v1/health
 
 A API responde:
 
 ```json
 {
   "status": "ok",
-  "service": "orbit-api"
+  "service": "orbit-api",
+  "environment": "development"
 }
 ```
 
@@ -38,11 +39,13 @@ A API responde:
 `.env.example` documenta somente valores locais, sem segredos.
 O desenvolvimento inicial funciona sem criar um arquivo `.env`.
 
-A API lê `API_PORT` do ambiente do processo e usa 3001 como padrão.
-O frontend reserva `NEXT_PUBLIC_API_URL` para a integração futura.
-Quando necessário, o Next.js lê variáveis locais em `apps/web/.env.local`;
-a API ainda não carrega arquivos de ambiente automaticamente.
-Defina `API_PORT` no terminal se precisar alterar a porta.
+A API usa `ConfigModule` para validar `NODE_ENV`, `API_PORT` e `FRONTEND_URL`.
+Os padrões locais são `development`, `3001` e `http://localhost:3000`.
+Variáveis do processo têm prioridade sobre os arquivos opcionais `.env` da API
+ou da raiz. Configurações inválidas impedem a inicialização.
+Nenhum arquivo `.env` real é necessário ou fornecido.
+O frontend reserva `NEXT_PUBLIC_API_URL` para a integração futura e pode ler
+variáveis locais em `apps/web/.env.local`.
 
 Nunca versione arquivos de ambiente reais, dependências, builds ou caches.
 
@@ -73,10 +76,9 @@ Os arquivos em `starter/` não participam do workspace ativo.
 | `npm run typecheck` | Gera tipos do Next.js e verifica TypeScript |
 | `npm run test` | Executa o runner nativo do Node.js nos aplicativos |
 
-Ainda não existem testes automatizados. O comando `test` está preparado para
-descobrir arquivos `*.test.js` ou `*.test.mjs` com `node:test`.
-A escolha de ferramentas de teste para funcionalidades futuras será feita
-quando houver código que precise delas.
+Os testes da API usam `node:test` e a injeção HTTP do Fastify para verificar
+healthcheck, configuração, CORS, validação e erros. O Turborepo compila cada app
+antes de seus testes. O frontend ainda não tem testes automatizados próprios.
 
 Para iniciar os builds de produção:
 
@@ -99,8 +101,8 @@ O frontend usa o alias `@/*` para `src/*`.
 A API usa ESM, resolução NodeNext e o alias `#app/*`, também definido em
 `package.json#imports` para funcionar no build executado pelo Node.js.
 
-Não há banco de dados, autenticação, módulos de domínio ou serviços externos
-configurados nesta etapa.
+Há módulos mínimos para os domínios futuros, sem endpoints de negócio.
+Não há banco de dados, autenticação ou serviços externos configurados nesta etapa.
 
 ## Fundação visual
 
@@ -112,3 +114,5 @@ chamadas ao backend.
 
 Consulte `docs/VISUAL_FOUNDATION.md` para o inventário de arquivos, componentes,
 decisões e validações da segunda etapa.
+
+Consulte `docs/BACKEND_FOUNDATION.md` para a estrutura e as decisões da etapa 3A.
