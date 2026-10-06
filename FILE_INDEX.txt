@@ -1,0 +1,28 @@
+Orbit-Codex-Starter-Pack-No-Prompts/
+├── README.md
+├── START_HERE.md
+├── FILE_INDEX.txt
+├── architecture.json
+├── design/
+│   ├── orbit-brand-board.png
+│   ├── orbit-logo-reference.png
+│   └── tokens.json
+├── docs/
+│   ├── AI.md
+│   ├── API.md
+│   ├── ARCHITECTURE.md
+│   ├── CODING_STANDARDS.md
+│   ├── DATABASE.md
+│   ├── DECISIONS.md
+│   ├── DEPLOYMENT.md
+│   ├── DESIGN_SYSTEM.md
+│   ├── PRODUCT.md
+│   ├── ROADMAP.md
+│   ├── SECURITY.md
+│   └── TESTING.md
+└── starter/
+    ├── .editorconfig
+    ├── .env.example
+    ├── .gitignore
+    ├── package.json
+    └── turbo.json

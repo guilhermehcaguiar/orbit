@@ -1,0 +1,101 @@
+# Orbit
+
+**Seu foco em órbita.**
+
+Plataforma acadêmica para estudantes, planejada para organizar matérias, horários,
+provas, tarefas, Pomodoro e recursos de IA. Esta etapa contém apenas a fundação do
+monorepo, uma página inicial e o endpoint de saúde da API.
+
+## Requisitos
+
+- Node.js 24 LTS, versão 24.15.0 ou superior (definido em `.nvmrc`).
+- npm 10.9 ou 11, com npm workspaces definidos no `package.json` raiz.
+
+## Instalação e desenvolvimento
+
+Na raiz do repositório:
+
+```bash
+npm install
+npm run dev
+```
+
+- Frontend: http://localhost:3000
+- API: http://localhost:3001/health
+
+A API responde:
+
+```json
+{
+  "status": "ok",
+  "service": "orbit-api"
+}
+```
+
+## Variáveis de ambiente
+
+`.env.example` documenta somente valores locais, sem segredos.
+O desenvolvimento inicial funciona sem criar um arquivo `.env`.
+
+A API lê `API_PORT` do ambiente do processo e usa 3001 como padrão.
+O frontend reserva `NEXT_PUBLIC_API_URL` para a integração futura.
+Quando necessário, o Next.js lê variáveis locais em `apps/web/.env.local`;
+a API ainda não carrega arquivos de ambiente automaticamente.
+Defina `API_PORT` no terminal se precisar alterar a porta.
+
+Nunca versione arquivos de ambiente reais, dependências, builds ou caches.
+
+## Estrutura
+
+```text
+apps/
+  web/                     Next.js 16, React 19.3, App Router e Tailwind CSS 4
+  api/                     NestJS 12 com Fastify
+packages/
+  config-eslint/           Configurações ESLint compartilhadas
+  config-typescript/       Configurações TypeScript estritas
+docs/                      Documentação e decisões técnicas
+```
+
+Os materiais preexistentes em `docs/`, `design/`, `starter/`,
+`architecture.json` e `START_HERE.md` são referências para a evolução.
+Os arquivos em `starter/` não participam do workspace ativo.
+
+## Comandos
+
+| Comando | Descrição |
+| --- | --- |
+| `npm run dev` | Inicia frontend e API em modo de desenvolvimento |
+| `npm run build` | Compila os aplicativos |
+| `npm run lint` | Executa ESLint nos aplicativos e na configuração compartilhada |
+| `npm run typecheck` | Gera tipos do Next.js e verifica TypeScript |
+| `npm run test` | Executa o runner nativo do Node.js nos aplicativos |
+
+Ainda não existem testes automatizados. O comando `test` está preparado para
+descobrir arquivos `*.test.js` ou `*.test.mjs` com `node:test`.
+A escolha de ferramentas de teste para funcionalidades futuras será feita
+quando houver código que precise delas.
+
+Para iniciar os builds de produção:
+
+```bash
+npm run start --workspace @orbit/web
+npm run start --workspace @orbit/api
+```
+
+## Configuração do monorepo
+
+Os workspaces `apps/*` e `packages/*` são definidos no `package.json` raiz.
+Os pacotes locais usam a versão `0.0.0`, correspondente aos workspaces privados;
+o npm cria os vínculos locais durante a instalação. Mantenha `package-lock.json`
+versionado e use `npm ci` quando esse arquivo estiver disponível e atualizado.
+O TypeScript tem configuração estrita
+compartilhada e referências aos apps no arquivo raiz; as verificações são
+executadas por app via Turborepo.
+
+O frontend usa o alias `@/*` para `src/*`.
+A API usa ESM, resolução NodeNext e o alias `#app/*`, também definido em
+`package.json#imports` para funcionar no build executado pelo Node.js.
+
+Não há banco de dados, autenticação, módulos de domínio ou serviços externos
+configurados nesta etapa.

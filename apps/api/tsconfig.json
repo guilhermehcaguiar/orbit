@@ -1,0 +1,15 @@
+{
+  "extends": "@orbit/config-typescript/nestjs.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
+    "types": ["node"],
+    "paths": {
+      "#app/*": ["./src/*.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

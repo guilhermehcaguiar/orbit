@@ -1,0 +1,41 @@
+{
+  "product": "Orbit",
+  "architecture": "modular-monolith",
+  "monorepo": "npm-workspaces+turborepo",
+  "frontend": {
+    "framework": "Next.js 16",
+    "react": "19.3",
+    "styling": "Tailwind CSS 4.x"
+  },
+  "backend": {
+    "framework": "NestJS 12",
+    "adapter": "Fastify"
+  },
+  "data": {
+    "database": "PostgreSQL (Supabase)",
+    "auth": "Supabase Auth",
+    "storage": "Supabase Storage",
+    "orm": "Drizzle ORM",
+    "authorization": "RLS + API ownership checks"
+  },
+  "ai": {
+    "pattern": "provider adapter",
+    "initialProvider": "OpenAI",
+    "rag": "pgvector",
+    "structuredOutputs": true
+  },
+  "tests": [
+    "Vitest",
+    "Playwright"
+  ],
+  "observability": [
+    "OpenTelemetry",
+    "Sentry",
+    "Pino"
+  ],
+  "deploy": {
+    "web": "Vercel",
+    "api": "Docker on Railway/Render/Fly.io",
+    "database": "Supabase"
+  }
+}
