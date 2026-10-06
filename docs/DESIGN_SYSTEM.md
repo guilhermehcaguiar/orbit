@@ -48,7 +48,22 @@ Sidebar fixa ~240px, conteúdo fluido com largura máxima confortável. Dashboar
 
 Bottom navigation com 4 destinos principais + Mais. Pomodoro deve ser fácil de iniciar com uma mão.
 
-## Componentes iniciais
+## Componentes implementados na segunda etapa
+
+Disponíveis em `@orbit/design-system`: Button, Card, Input, Badge, IconButton,
+Sidebar, SidebarItem, PageHeader, StatCard, ProgressBar, EmptyState, SectionTitle,
+Avatar, SearchInput, ThemeToggle e Tooltip. ThemeProvider controla o tema apenas
+em memória, com dark mode padrão. As props tipadas são exportadas pelo pacote.
+
+A implementação usa tokens CSS em `packages/design-system/src/styles/tokens.css`.
+Importe `@orbit/design-system/styles.css` uma vez no CSS global do aplicativo.
+Os tokens de fontes recebem as variáveis de `next/font/local` configuradas em
+`apps/web/src/styles/fonts.ts`. Fontes locais incluem licenças OFL.
+
+O modo claro é uma preparação estrutural, com cores semânticas ajustadas para
+contraste. A identidade visual principal permanece escura.
+
+## Componentes planejados para etapas futuras
 
 - Button
 - IconButton

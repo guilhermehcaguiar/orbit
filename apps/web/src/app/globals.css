@@ -1,8 +1,18 @@
 @import 'tailwindcss';
+@import '@orbit/design-system/styles.css';
+@import '../styles/shell.css';
+@import '../styles/dashboard.css';
 
-body {
-  margin: 0;
-  background: #09090b;
-  color: #fafafa;
-  font-family: Arial, Helvetica, sans-serif;
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--orbit-bg); color: var(--orbit-text); font-family: var(--orbit-font-body); line-height: var(--orbit-leading); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p { margin: 0; }
+button, input { font: inherit; }
+button, a, input { -webkit-tap-highlight-color: transparent; }
+a { color: inherit; }
+svg { flex-shrink: 0; }
+:focus-visible { outline: var(--orbit-focus-ring); outline-offset: var(--orbit-focus-offset); }
+::selection { background: var(--orbit-primary); color: var(--orbit-on-primary); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

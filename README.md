@@ -4,7 +4,8 @@
 
 Plataforma acadêmica para estudantes, planejada para organizar matérias, horários,
 provas, tarefas, Pomodoro e recursos de IA. Esta etapa contém apenas a fundação do
-monorepo, uma página inicial e o endpoint de saúde da API.
+monorepo, um dashboard visual com dados mockados, o design system e o endpoint
+de saúde da API. Os módulos de navegação adicionais são prévias visuais.
 
 ## Requisitos
 
@@ -54,6 +55,7 @@ apps/
 packages/
   config-eslint/           Configurações ESLint compartilhadas
   config-typescript/       Configurações TypeScript estritas
+  design-system/           Componentes React reutilizáveis e tokens CSS
 docs/                      Documentação e decisões técnicas
 ```
 
@@ -99,3 +101,14 @@ A API usa ESM, resolução NodeNext e o alias `#app/*`, também definido em
 
 Não há banco de dados, autenticação, módulos de domínio ou serviços externos
 configurados nesta etapa.
+
+## Fundação visual
+
+O dashboard inicia em modo escuro e usa Sora nos títulos e Inter na interface,
+hospedadas localmente pelo Next.js. Tokens e componentes ficam em
+`packages/design-system`; mocks, layouts e componentes do dashboard ficam em
+`apps/web/src`. As interações usam apenas estado local, sem persistência ou
+chamadas ao backend.
+
+Consulte `docs/VISUAL_FOUNDATION.md` para o inventário de arquivos, componentes,
+decisões e validações da segunda etapa.

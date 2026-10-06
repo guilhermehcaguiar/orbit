@@ -1,0 +1,16 @@
+{
+  "extends": "@orbit/config-typescript/base.json",
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "composite": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+    "isolatedModules": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules"]
+}

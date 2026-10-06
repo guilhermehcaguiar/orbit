@@ -1,0 +1,27 @@
+{
+  "name": "@orbit/design-system",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles/index.css"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^19.3.0"
+  },
+  "dependencies": {
+    "lucide-react": "^1.52.0"
+  },
+  "devDependencies": {
+    "@orbit/config-eslint": "0.0.0",
+    "@orbit/config-typescript": "0.0.0",
+    "@types/react": "^19.0.0",
+    "eslint": "^9.39.1",
+    "typescript": "~5.9.3"
+  }
+}
