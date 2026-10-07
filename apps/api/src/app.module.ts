@@ -1,17 +1,21 @@
-import { Module } from '@nestjs/common';
+import { Module, type MiddlewareConsumer, type NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { fileURLToPath } from 'node:url';
-import { validateEnvironment } from '#app/config/environment';
-import { AuthModule } from '#app/modules/auth/auth.module';
-import { UsersModule } from '#app/modules/users/users.module';
-import { SubjectsModule } from '#app/modules/subjects/subjects.module';
-import { ScheduleModule } from '#app/modules/schedule/schedule.module';
-import { TasksModule } from '#app/modules/tasks/tasks.module';
-import { ExamsModule } from '#app/modules/exams/exams.module';
-import { FocusModule } from '#app/modules/focus/focus.module';
-import { StudyPlansModule } from '#app/modules/study-plans/study-plans.module';
-import { AiModule } from '#app/modules/ai/ai.module';
-import { HealthModule } from '#app/modules/health/health.module';
+import { validateEnvironment } from './config/environment.js';
+import { LoggingMiddleware } from './common/middleware/logging.middleware.js';
+import { RequestIdMiddleware } from './common/middleware/request-id.middleware.js';
+import { DatabaseModule } from './database/database.module.js';
+import { LoggerModule } from './logger/logger.module.js';
+import { AuthModule } from './modules/auth/auth.module.js';
+import { UsersModule } from './modules/users/users.module.js';
+import { SubjectsModule } from './modules/subjects/subjects.module.js';
+import { ScheduleModule } from './modules/schedule/schedule.module.js';
+import { TasksModule } from './modules/tasks/tasks.module.js';
+import { ExamsModule } from './modules/exams/exams.module.js';
+import { FocusModule } from './modules/focus/focus.module.js';
+import { StudyPlansModule } from './modules/study-plans/study-plans.module.js';
+import { AiModule } from './modules/ai/ai.module.js';
+import { HealthModule } from './modules/health/health.module.js';
 
 @Module({
   imports: [
@@ -25,6 +29,8 @@ import { HealthModule } from '#app/modules/health/health.module';
       ],
       validate: validateEnvironment,
     }),
+    DatabaseModule,
+    LoggerModule,
     AuthModule,
     UsersModule,
     SubjectsModule,
@@ -37,4 +43,8 @@ import { HealthModule } from '#app/modules/health/health.module';
     HealthModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(RequestIdMiddleware, LoggingMiddleware).forRoutes('*');
+  }
+}

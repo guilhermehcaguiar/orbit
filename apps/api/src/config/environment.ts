@@ -2,6 +2,7 @@ export interface ApiEnvironment {
   NODE_ENV: 'development' | 'test' | 'production';
   API_PORT: number;
   FRONTEND_URL: string;
+  DATABASE_URL: string;
 }
 
 export function validateEnvironment(values: Record<string, unknown>): ApiEnvironment {
@@ -30,5 +31,13 @@ export function validateEnvironment(values: Record<string, unknown>): ApiEnviron
     throw new Error('Configuração inválida: FRONTEND_URL deve ser uma origem HTTP ou HTTPS sem caminho, credenciais ou wildcard.');
   }
 
-  return { NODE_ENV: environment, API_PORT: port, FRONTEND_URL: origin };
+  const databaseUrl = values.DATABASE_URL;
+  if (databaseUrl !== undefined && typeof databaseUrl !== 'string') {
+    throw new Error('Configuração inválida: DATABASE_URL deve ser uma string.');
+  }
+  if (databaseUrl !== undefined && databaseUrl !== '' && !databaseUrl.startsWith('postgresql://') && !databaseUrl.startsWith('postgres://')) {
+    throw new Error('Configuração inválida: DATABASE_URL deve ser uma URL PostgreSQL válida.');
+  }
+
+  return { NODE_ENV: environment, API_PORT: port, FRONTEND_URL: origin, DATABASE_URL: databaseUrl ?? '' };
 }

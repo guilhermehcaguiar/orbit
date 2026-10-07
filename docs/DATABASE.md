@@ -9,7 +9,100 @@
 - RLS obrigatório nas tabelas de usuário.
 - enums preferencialmente modelados como texto validado ou enum de banco quando estável.
 
-## Entidades principais
+## Camada de Persistência (etapa 3B)
+
+### ORM e Ferramentas
+- **Drizzle ORM** — type-safe, leve, compatível com PostgreSQL.
+- **drizzle-kit** — geração de migrations, introspecção, check de schema.
+- **node-postgres (`pg`)** — driver PostgreSQL usado pelo adapter `drizzle-orm/node-postgres`, com pool de conexões.
+
+### Estrutura do projeto
+```
+apps/api/
+  drizzle.config.ts          # configuração do drizzle-kit
+  drizzle/                   # migrations geradas
+  src/
+    database/
+      database.module.ts     # módulo global de banco
+      database.service.ts    # conexão, lifecycle, pool
+      schema/
+        profiles.ts          # tabela profiles
+      repositories/
+        profiles.repository.ts
+```
+
+### Configuração (`drizzle.config.ts`)
+```ts
+export default defineConfig({
+  dialect: 'postgresql',
+  schema: './src/database/schema/*.ts',
+  out: './drizzle',
+  dbCredentials: { url: process.env.DATABASE_URL },
+  verbose: true,
+  strict: true,
+});
+```
+
+### Scripts de banco
+| Comando | Descrição |
+|---------|-----------|
+| `npm run db:generate` | Gera migration SQL a partir do schema TypeScript |
+| `npm run db:migrate`  | Aplica migrations pendentes no banco alvo |
+| `npm run db:check`    | Verifica se schema TypeScript está sincronizado com o banco |
+
+Migrations **não** são executadas automaticamente em produção. O deploy deve rodar `db:migrate` explicitamente.
+
+### Schema inicial — `profiles`
+Tabela mínima para validar a arquitetura. Compatível com `auth.users` do Supabase (PK `uuid`).
+
+| Coluna | Tipo | Constraints |
+|--------|------|-------------|
+| `id` | `uuid` | PK, NOT NULL |
+| `email` | `varchar(255)` | NOT NULL, UNIQUE |
+| `name` | `varchar(255)` | NOT NULL |
+| `avatar_url` | `text` | NULL |
+| `created_at` | `timestamptz` | NOT NULL, DEFAULT `now()` |
+| `updated_at` | `timestamptz` | NOT NULL, DEFAULT `now()` |
+
+Índice único em `email` para lookup rápido.
+
+```sql
+CREATE TABLE "profiles" (
+  "id" uuid PRIMARY KEY NOT NULL,
+  "email" varchar(255) NOT NULL,
+  "name" varchar(255) NOT NULL,
+  "avatar_url" text,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+CREATE UNIQUE INDEX "profiles_email_idx" ON "profiles" USING btree ("email");
+```
+
+### Repository Pattern
+`ProfilesRepository` expõe apenas operações necessárias:
+- `findById(id)`
+- `findByEmail(email)`
+- `create(profile)`
+- `update(id, { name, avatarUrl })`
+
+Controllers **não** acessam repository diretamente. Fluxo:
+```
+Controller → UsersService → ProfilesRepository → Database
+```
+
+### Variáveis de ambiente
+| Variável | Obrigatória | Descrição |
+|----------|-------------|-----------|
+| `DATABASE_URL` | Não (local) | URL de conexão PostgreSQL (`postgresql://` ou `postgres://`). Vazio desabilita persistência. |
+
+Validada em `validateEnvironment()`; formato inválido falha no boot.
+Quando configurada, a API verifica a conexão com `SELECT 1` na inicialização.
+Uma falha encerra o pool e impede o boot. O ORM é criado antes dos hooks de
+lifecycle para que o provider `DATABASE` receba a instância correta.
+O campo `database: up` no healthcheck indica que essa verificação inicial passou;
+não representa uma nova consulta ao banco a cada requisição.
+
+## Entidades principais (futuras)
 
 ### profiles
 - id (FK auth.users)

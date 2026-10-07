@@ -8,6 +8,7 @@ import { IsString } from 'class-validator';
 import { configureApp } from '../dist/config/configure-app.js';
 
 process.env.NODE_ENV = 'test';
+process.env.DATABASE_URL = '';
 process.env.API_PORT = '3001';
 process.env.FRONTEND_URL = 'http://localhost:3000';
 const { AppModule } = await import('../dist/app.module.js');
@@ -36,7 +37,7 @@ Module({ imports: [AppModule], controllers: [ErrorFixtureController] })(TestModu
 let app;
 before(async () => {
   app = await NestFactory.create(TestModule, new FastifyAdapter(), { logger: false });
-  configureApp(app);
+  await configureApp(app);
   await app.init();
   await app.getHttpAdapter().getInstance().ready();
 });
@@ -97,4 +98,12 @@ test('the global pipe transforms DTOs and rejects extra or invalid fields over H
     assert.equal(response.json().error, 'Bad Request');
     assert.ok(Array.isArray(response.json().message));
   }
+});
+
+test('request IDs are generated and valid client IDs are echoed over HTTP', async () => {
+  const response = await app.inject({ method: 'GET', url: '/api/v1/health' });
+  assert.match(response.headers['x-request-id'], /^[0-9a-f-]{36}$/i);
+  const id = '550e8400-e29b-41d4-a716-446655440000';
+  const echoed = await app.inject({ method: 'GET', url: '/api/v1/health', headers: { 'x-request-id': id } });
+  assert.equal(echoed.headers['x-request-id'], id);
 });

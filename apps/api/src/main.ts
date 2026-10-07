@@ -15,7 +15,7 @@ async function bootstrap(): Promise<void> {
     new FastifyAdapter(),
   );
 
-  configureApp(app);
+  await configureApp(app);
   app.enableShutdownHooks();
   const config = app.get(ConfigService<ApiEnvironment, true>);
   await app.listen(config.get('API_PORT', { infer: true }), '0.0.0.0');
