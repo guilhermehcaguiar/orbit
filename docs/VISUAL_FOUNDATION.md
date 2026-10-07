@@ -14,7 +14,8 @@ packages/design-system/
     components/             16 componentes e ThemeProvider
     styles/                 tokens, primitives, layout e index CSS
 apps/web/src/
-  app/                      layout, dashboard, icon.svg e [section]/page.tsx
+  app/                      layout público, landing, login, cadastro e icon.svg
+    (workspace)/            AppShell, app/page.tsx e [section]/page.tsx
   components/               marca, header, navegação, busca e diálogo
     dashboard/              composição, cards, disciplinas e banner
   layouts/                  AppShell
@@ -121,3 +122,80 @@ arquivo foi movido nem permissão de sistema alterada por causa desse aviso.
 As cinco ocorrências altas de npm audit na cadeia ESLint já existiam na base e
 continuam pendentes. Nenhuma correção forçada ou mudança de versões principais
 foi aplicada nesta etapa.
+
+## Landing pública e telas de acesso
+
+A rota `/` apresenta a landing; `/app` mantém o dashboard da etapa visual.
+As rotas dos módulos existentes foram preservadas no grupo `(workspace)`, cujo
+layout concentra AppShell e ThemeProvider. O layout raiz agora oferece apenas
+fontes, metadados gerais e estilos, sem sidebar pública. As telas públicas começam
+em modo escuro; a alternância de tema permanece no workspace.
+
+Componentes em `apps/web/src/components/public/`:
+
+- `Navbar`: menu responsivo com estado expandido, fechamento por Escape e links de seção.
+- `Footer`: navegação interna e Privacidade/Termos como textos “Em breve”.
+- `FeatureCard`: Card, ícone Lucide, título, descrição e selo opcional.
+- `ProductPreview`: composição de dashboard com mocks e SubjectCard existentes;
+  não reproduz lógica de Pomodoro ou IA. Link explícito para `/app`.
+- `AuthCard`: composição reutilizável de login/cadastro com Input, Button e Badge.
+
+`styles/public.css` complementa o design system para composição pública, grids,
+formulários e breakpoints. Os tokens e contratos do pacote compartilhado foram
+preservados. Sora/Inter continuam locais; não há imagens ou fontes externas.
+Roxo e ciano aparecem em detalhes, com brilho discreto no mockup.
+
+Login/cadastro são prévias sem backend: validação HTML de campos obrigatórios e
+email, mínimo de 8 caracteres na nova senha, nome sem espaços isolados e
+confirmação igual à senha. Envio é impedido; sucesso de validação limpa campos e
+anuncia a integração futura, sem criar conta, sessão ou redirecionar. Recuperação
+de senha tem mensagem equivalente. Nenhum armazenamento ou chamada HTTP foi
+adicionado. O dashboard continua público e demonstrativo até autenticação real.
+
+IA, calendário, tarefas, provas, sessões e estatísticas são identificados como
+planejados/prévias. Dados do mockup são ilustrativos. O fluxo previsto é landing →
+autenticação real (futura) → workspace protegido. Privacidade e Termos aguardam
+conteúdo real. A camada Drizzle/PostgreSQL já está preparada na API, sem alterações
+nesta etapa nem conexão com as telas de acesso.
+
+Metadados básicos específicos para landing, login, cadastro e dashboard. Sem SEO
+complexo, serviços externos, deploy ou IA real.
+
+### Inventário desta etapa pública
+
+Criados: `app/(workspace)/layout.tsx`, `app/(workspace)/app/page.tsx`,
+`app/login/page.tsx`, `app/cadastro/page.tsx`, `styles/public.css` e os cinco
+componentes públicos listados acima. Movido: `app/[section]/page.tsx` para
+`app/(workspace)/[section]/page.tsx`, com retorno e geração de rotas ajustados.
+Alterados: `app/layout.tsx`, `app/page.tsx`, `app/globals.css`, `components/brand.tsx`,
+`components/app-navigation.tsx`, `components/dashboard/ai-banner.tsx`,
+`mocks/navigation.ts`, `mocks/dashboard.ts`, README e documentação visual/design.
+A documentação histórica do backend agora aponta para a camada de persistência
+atual. Nenhum arquivo de implementação do backend foi alterado.
+
+### Validação da etapa pública
+
+Lint, typecheck, test e build aprovados. A suíte existente inclui 8 testes da API;
+o runner do frontend ainda não contém testes unitários. As verificações de
+navegador usam Brave headless via Chrome DevTools Protocol, sem nova dependência
+no projeto. Foram avaliadas `/`, `/login`, `/cadastro` e `/app` em 1440, 1024, 768 e
+390 px, com inspeção das capturas desktop/mobile. Sem overflow horizontal, erros
+de console/runtime, respostas HTTP de erro ou requisições externas.
+
+Verificados menu mobile e Escape com retorno de foco, âncora de recursos, CTAs,
+link de prévia do dashboard, links entre login/cadastro, recuperação futura,
+validação nativa e confirmação de senha com foco no campo inválido. Submissões
+válidas mostram aviso futuro, limpam campos, não fazem requisições nem armazenam
+dados em localStorage/sessionStorage. `/subjects` e `/calendar` também verificadas.
+Evidências temporárias: `/tmp/orbit-visual`.
+
+O primeiro typecheck encontrou referência gerada à antiga rota; o artefato foi
+removido e regenerado. O primeiro build foi bloqueado pelo sandbox ao abrir uma
+porta interna do Turbopack; preservar o cache antigo em `/tmp` e compilar com
+permissão de execução local resolveu a falha. A porta 3000 já tinha um frontend
+ativo durante a validação inicial. Nenhum ajuste de backend ou dependências foi
+necessário. Autenticação, recuperação real, IA e páginas legais ficam pendentes
+para as próximas etapas.
+
+A checagem completa de 16 combinações e das interações foi repetida no build
+final de produção, iniciado em `http://localhost:3100`, também sem falhas.

@@ -1,6 +1,8 @@
 # Fundação modular do backend — etapa 3A
 
-NestJS com Fastify, ESM e TypeScript estrito. O frontend permanece inalterado.
+Registro histórico da etapa 3A: NestJS com Fastify, ESM e TypeScript estrito.
+Na etapa 3B, a camada Drizzle/PostgreSQL foi preparada; consulte `DATABASE.md`
+para o estado atual de persistência. O frontend público foi adicionado depois.
 
 ## Estrutura
 

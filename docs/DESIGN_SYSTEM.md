@@ -89,3 +89,17 @@ contraste. A identidade visual principal permanece escura.
 ## Referência
 
 Abrir `design/orbit-brand-board.png` antes de implementar UI.
+
+## Composição pública
+
+Landing e acesso usam os mesmos tokens, fontes locais, Card, Badge, Button e Input.
+Não foram alterados contratos ou tokens do pacote compartilhado. Navbar, Footer,
+FeatureCard, ProductPreview e AuthCard ficam no frontend; `styles/public.css`
+organiza a composição e os breakpoints. O mockup reutiliza SubjectCard e dados
+existentes, sem duplicar lógica interativa do dashboard.
+
+Conteúdo público com largura máxima de 1160 px, hero centralizada, benefícios em
+4/2/1 colunas e recursos em 3/2/1 colunas. A navegação muda para menu expansível
+abaixo de 800 px, com Escape e retorno de foco. Login/cadastro usam card em duas
+colunas no desktop e uma coluna no tablet/mobile. Brilho discreto só na prévia;
+IA futura sempre acompanhada por indicação de disponibilidade.

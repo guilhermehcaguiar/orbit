@@ -3,9 +3,10 @@
 **Seu foco em órbita.**
 
 Plataforma acadêmica para estudantes, planejada para organizar matérias, horários,
-provas, tarefas, Pomodoro e recursos de IA. Esta etapa contém apenas a fundação do
-monorepo, um dashboard visual com dados mockados, o design system e o endpoint
-de saúde da API. Os módulos de navegação adicionais são prévias visuais.
+provas, tarefas, Pomodoro e recursos de IA. O projeto contém uma landing page pública, telas visuais de login e cadastro,
+um dashboard com dados mockados, o design system e a API de saúde. A camada de
+persistência Drizzle/PostgreSQL foi preparada na etapa anterior. Os módulos de
+navegação adicionais são prévias visuais.
 
 ## Requisitos
 
@@ -39,7 +40,8 @@ A API responde:
 `.env.example` documenta somente valores locais, sem segredos.
 O desenvolvimento inicial funciona sem criar um arquivo `.env`.
 
-A API usa `ConfigModule` para validar `NODE_ENV`, `API_PORT` e `FRONTEND_URL`.
+A API usa `ConfigModule` para validar `NODE_ENV`, `API_PORT`, `FRONTEND_URL` e
+`DATABASE_URL` (opcional no modo sem conexão).
 Os padrões locais são `development`, `3001` e `http://localhost:3000`.
 Variáveis do processo têm prioridade sobre os arquivos opcionais `.env` da API
 ou da raiz. Configurações inválidas impedem a inicialização.
@@ -77,7 +79,7 @@ Os arquivos em `starter/` não participam do workspace ativo.
 | `npm run test` | Executa o runner nativo do Node.js nos aplicativos |
 
 Os testes da API usam `node:test` e a injeção HTTP do Fastify para verificar
-healthcheck, configuração, CORS, validação e erros. O Turborepo compila cada app
+healthcheck, configuração, CORS, validação e erros, além de testes de persistência. O Turborepo compila cada app
 antes de seus testes. O frontend ainda não tem testes automatizados próprios.
 
 Para iniciar os builds de produção:
@@ -102,7 +104,9 @@ A API usa ESM, resolução NodeNext e o alias `#app/*`, também definido em
 `package.json#imports` para funcionar no build executado pelo Node.js.
 
 Há módulos mínimos para os domínios futuros, sem endpoints de negócio.
-Não há banco de dados, autenticação ou serviços externos configurados nesta etapa.
+A camada de banco Drizzle/PostgreSQL, schema, migrations e repository de profiles
+já está preparada; consulte `docs/DATABASE.md`. Não há autenticação real nem
+integração do frontend com o banco ou serviços externos.
 
 ## Fundação visual
 
@@ -113,6 +117,29 @@ hospedadas localmente pelo Next.js. Tokens e componentes ficam em
 chamadas ao backend.
 
 Consulte `docs/VISUAL_FOUNDATION.md` para o inventário de arquivos, componentes,
-decisões e validações da segunda etapa.
+decisões e validações visuais, incluindo as rotas públicas.
 
 Consulte `docs/BACKEND_FOUNDATION.md` para a estrutura e as decisões da etapa 3A.
+
+## Rotas e fluxo público
+
+| Rota | Estado atual |
+| --- | --- |
+| `/` | Landing pública: benefícios, recursos, como funciona, IA futura e CTAs |
+| `/login` | Formulário visual de e-mail e senha; sem autenticação |
+| `/cadastro` | Formulário visual de nome, e-mail e confirmação de senha |
+| `/app` | Dashboard existente, livre para explorar com dados demonstrativos |
+| `/subjects` | Prévia de disciplinas |
+| `/calendar`, `/tasks`, `/exams`, `/pomodoro`, `/ai`, `/statistics`, `/settings` | Prévias dos módulos existentes |
+
+Fluxo atual: landing → login/cadastro → mensagem de integração futura. Os
+formulários validam campos no navegador, impedem envio real e não armazenam
+senhas ou dados em localStorage. Recuperação de senha também apenas informa sua
+ativação futura. O dashboard é acessível pelo link “Abrir prévia”, sem sessão ou
+proteção de rota. Fluxo previsto após a etapa de autenticação: landing → acesso
+real → dashboard protegido. Nenhuma integração de API, IA, OAuth ou deploy foi
+adicionada nesta etapa.
+
+A landing e as telas de acesso usam o layout público; o grupo `(workspace)`
+compartilha o AppShell entre o dashboard e os módulos sem alterar as URLs destes.
+Metadados específicos estão definidos para `/`, `/login`, `/cadastro` e `/app`.

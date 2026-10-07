@@ -2,6 +2,8 @@
 @import '@orbit/design-system/styles.css';
 @import '../styles/shell.css';
 @import '../styles/dashboard.css';
+@import '../styles/public.css';
+@import '../styles/public.css';
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }

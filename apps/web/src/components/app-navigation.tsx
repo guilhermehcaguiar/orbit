@@ -18,7 +18,7 @@ export function AppNavigation() {
     return <SidebarItem key={item.href} href={item.href} icon={<Icon size={19} />} active={pathname === item.href}>{item.label}</SidebarItem>;
   };
   return <>
-    <Sidebar brand={<Brand />} footer={<div className="sidebar-note"><GraduationCap size={21} aria-hidden="true" /><p>Mais foco hoje.<br /><span>Um futuro maior.</span></p></div>}>
+    <Sidebar brand={<Brand href="/app" />} footer={<div className="sidebar-note"><GraduationCap size={21} aria-hidden="true" /><p>Mais foco hoje.<br /><span>Um futuro maior.</span></p></div>}>
       <p className="nav-label">Seu workspace</p>
       {navigation.filter(item => item.group === 'study').map(renderItem)}
       <div className="sidebar-account">{navigation.filter(item => item.group === 'account').map(renderItem)}</div>
