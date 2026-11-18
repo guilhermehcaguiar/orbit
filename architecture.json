@@ -12,11 +12,11 @@
     "adapter": "Fastify"
   },
   "data": {
-    "database": "PostgreSQL (Supabase)",
-    "auth": "Supabase Auth",
-    "storage": "Supabase Storage",
+    "database": "PostgreSQL convencional (Neon PostgreSQL Free no ambiente hospedado)",
+    "auth": "Identidade externa (pendente)",
+    "storage": "Storage (pendente)",
     "orm": "Drizzle ORM",
-    "authorization": "RLS + API ownership checks"
+    "authorization": "RLS + API ownership checks (defesa adicional a projetar)"
   },
   "ai": {
     "pattern": "provider adapter",
@@ -24,18 +24,30 @@
     "rag": "pgvector",
     "structuredOutputs": true
   },
-  "tests": [
-    "Vitest",
-    "Playwright"
-  ],
-  "observability": [
-    "OpenTelemetry",
-    "Sentry",
-    "Pino"
-  ],
+  "tests": {
+    "implemented": ["node:test", "Fastify inject", "dublês de persistência"],
+    "planned": ["integração com Postgres real", "Playwright"]
+  },
+  "observability": {
+    "implemented": ["Pino", "request ID"],
+    "planned": ["OpenTelemetry", "Sentry"]
+  },
   "deploy": {
-    "web": "Vercel",
-    "api": "Docker on Railway/Render/Fly.io",
-    "database": "Supabase"
+    "web": "Vercel Hobby (preset Next.js, raiz apps/web, Node 24.x, lockfile raiz)",
+    "api": "Render Free (Web Service nativo, raiz repositório, Node .nvmrc, build npm ci --include=dev && npm run build --workspace @orbit/api, start npm run start --workspace @orbit/api, NODE_ENV=production, PORT plataforma, health /api/v1/health, FRONTEND_URL origem exata, DATABASE_URL segredo runtime)",
+    "database": "Neon PostgreSQL Free (pooler, sslmode=verify-full, compute 0.25 CU autoscaling, 1 GB storage/project, 5 GB egress/project/month)"
+  },
+  "identity": {
+    "pattern": "UUID interno associado à futura identidade externa",
+    "status": "pendente antes de dados reais",
+    "defense": "RLS como defesa adicional a projetar e testar"
+  },
+  "planning": {
+    "ci": "pendente",
+    "auth": "pendente (integração com identidade externa)",
+    "storage": "pendente (futuro)",
+    "redis": "pendente",
+    "rag": "pendente (pgvector planejado)",
+    "observability": "OpenTelemetry e Sentry pendentes"
   }
 }

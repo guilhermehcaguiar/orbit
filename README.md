@@ -43,6 +43,8 @@ O desenvolvimento inicial funciona sem criar um arquivo `.env`.
 A API usa `ConfigModule` para validar `NODE_ENV`, `API_PORT`, `FRONTEND_URL` e
 `DATABASE_URL` (opcional no modo sem conexão).
 Os padrões locais são `development`, `3001` e `http://localhost:3000`.
+A porta efetiva segue `PORT` (injetada pelo Render), `API_PORT` e o padrão
+`3001`, nessa ordem. Se a variável escolhida for inválida, o boot falha.
 Variáveis do processo têm prioridade sobre os arquivos opcionais `.env` da API
 ou da raiz. Configurações inválidas impedem a inicialização.
 Nenhum arquivo `.env` real é necessário ou fornecido.
@@ -107,6 +109,12 @@ Há módulos mínimos para os domínios futuros, sem endpoints de negócio.
 A camada de banco Drizzle/PostgreSQL, schema, migrations e repository de profiles
 já está preparada; consulte `docs/DATABASE.md`. Não há autenticação real nem
 integração do frontend com o banco ou serviços externos.
+
+## Hospedagem planejada
+
+Vercel Hobby para a web, Render Free para a API e Neon PostgreSQL Free para o
+banco. Consulte o [runbook de deploy](docs/DEPLOYMENT.md) e o [ADR-006](docs/DECISIONS.md#adr-006--postgresql-convencional-e-hospedagem-da-demonstração).
+O provisionamento e os testes nos provedores pertencem a uma etapa posterior.
 
 ## Fundação visual
 

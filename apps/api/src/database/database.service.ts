@@ -19,7 +19,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     const databaseUrl = this.config.get('DATABASE_URL', { infer: true });
     if (databaseUrl) {
       // Providers need the ORM before Nest invokes lifecycle hooks.
-      this.client = new Pool({ connectionString: databaseUrl, connectionTimeoutMillis: 5000 });
+      this.client = new Pool({
+        connectionString: databaseUrl,
+        connectionTimeoutMillis: 5000,
+        max: 5,
+      });
+      this.client.on('error', () => {
+        this.logger.warn('Database pool lost an idle connection');
+      });
+
       this.database = drizzle(this.client, { schema });
     }
   }
@@ -33,9 +41,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       await this.client.query('SELECT 1');
       this.connected = true;
       this.logger.log('Database connection established');
-    } catch (error) {
+    } catch {
       await this.onModuleDestroy();
-      throw error;
+      throw new Error('Falha ao estabelecer conexão com o banco de dados. Verifique a configuração DATABASE_URL.');
     }
   }
 

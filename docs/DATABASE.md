@@ -6,14 +6,14 @@
 - `created_at`, `updated_at` em tabelas mutáveis.
 - timestamps em UTC.
 - `user_id` em todas as entidades pertencentes ao usuário.
-- RLS obrigatório nas tabelas de usuário.
+- RLS obrigatório nas tabelas de usuário antes de receber dados reais. O schema atual de demonstração ainda não implementa RLS.
 - enums preferencialmente modelados como texto validado ou enum de banco quando estável.
 
 ## Camada de Persistência (etapa 3B)
 
 ### ORM e Ferramentas
 - **Drizzle ORM** — type-safe, leve, compatível com PostgreSQL.
-- **drizzle-kit** — geração de migrations, introspecção, check de schema.
+- **drizzle-kit** — geração de migrations, introspecção e verificação do histórico local de migrations.
 - **node-postgres (`pg`)** — driver PostgreSQL usado pelo adapter `drizzle-orm/node-postgres`, com pool de conexões.
 
 ### Estrutura do projeto
@@ -32,28 +32,22 @@ apps/api/
 ```
 
 ### Configuração (`drizzle.config.ts`)
-```ts
-export default defineConfig({
-  dialect: 'postgresql',
-  schema: './src/database/schema/*.ts',
-  out: './drizzle',
-  dbCredentials: { url: process.env.DATABASE_URL },
-  verbose: true,
-  strict: true,
-});
-```
+O Drizzle Kit usa os arquivos em `src/database/schema/` e grava migrations
+em `drizzle/`. Ele lê `DATABASE_URL` do processo. Se a variável estiver ausente,
+o arquivo de configuração tem um fallback para o banco `orbit` em
+`localhost:5432`.
 
 ### Scripts de banco
 | Comando | Descrição |
 |---------|-----------|
 | `npm run db:generate` | Gera migration SQL a partir do schema TypeScript |
 | `npm run db:migrate`  | Aplica migrations pendentes no banco alvo |
-| `npm run db:check`    | Verifica se schema TypeScript está sincronizado com o banco |
+| `npm run db:check`    | Verifica a consistência do histórico local de migrations |
 
-Migrations **não** são executadas automaticamente em produção. O deploy deve rodar `db:migrate` explicitamente.
+Um operador autorizado executa migrations separadamente, fora do build e do start. No Neon, use uma URL direta com `sslmode=verify-full` e papel de migração. Confirme a branch e o banco antes de aplicar. Interrompa a execução se a variável estiver ausente ou vazia em ambiente hospedado. Consulte o [runbook](DEPLOYMENT.md).
 
 ### Schema inicial — `profiles`
-Tabela mínima para validar a arquitetura. Compatível com `auth.users` do Supabase (PK `uuid`).
+Tabela mínima para validar a arquitetura. O chamador fornece o UUID. O schema atual não tem chave estrangeira para identidade nem RLS.
 
 | Coluna | Tipo | Constraints |
 |--------|------|-------------|
@@ -100,12 +94,18 @@ Quando configurada, a API verifica a conexão com `SELECT 1` na inicialização.
 Uma falha encerra o pool e impede o boot. O ORM é criado antes dos hooks de
 lifecycle para que o provider `DATABASE` receba a instância correta.
 O campo `database: up` no healthcheck indica que essa verificação inicial passou;
-não representa uma nova consulta ao banco a cada requisição.
+não representa uma nova consulta ao banco a cada requisição. Sem URL, o campo
+`database` é omitido. Se a verificação falhar com URL configurada, a API não
+inicia. Confira tabela, índice e permissões com um smoke diretamente no banco.
+
+No Render, configure `DATABASE_URL` com o pooler, `sslmode=verify-full` e
+um papel de runtime com privilégios mínimos. Guarde a URL direta separadamente
+para migrations. O frontend na Vercel não recebe credenciais de banco.
 
 ## Entidades principais (futuras)
 
 ### profiles
-- id (FK auth.users)
+- id (UUID interno associado à futura identidade externa)
 - display_name
 - timezone
 - locale
@@ -267,13 +267,11 @@ Criar índices para:
 - `material_id` em material_chunks;
 - índice vetorial somente quando RAG for ativado.
 
-## RLS mínima
+## Controle de acesso planejado
 
-Política conceitual para tabelas do usuário:
-
-```sql
-using (user_id = auth.uid())
-with check (user_id = auth.uid())
-```
+A API valida a sessão e associa a identidade externa ao UUID interno. Aplique
+ownership a leituras e mutações. Projete as políticas RLS a partir dessa
+identidade, limitada à transação quando houver pooling, e teste o isolamento
+entre duas contas com um papel de runtime sem bypass de RLS.
 
 Para entidades filhas sem `user_id`, validar ownership através da entidade pai ou incluir `user_id` para simplificar autorização.

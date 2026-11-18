@@ -4,7 +4,7 @@
 
 Arquitetura **modular monolith** em monorepo. É uma estrutura profissional, simples de operar no início e preparada para extração futura de serviços quando houver escala real.
 
-## Stack definida
+## Stack e evolução
 
 ### Runtime e workspace
 - Node.js 24 LTS
@@ -16,36 +16,28 @@ Arquitetura **modular monolith** em monorepo. É uma estrutura profissional, sim
 - Next.js 16 (App Router)
 - React 19.3
 - Tailwind CSS 4.x
-- shadcn/ui como base de componentes acessíveis
-- TanStack Query para estado servidor/client fetching quando necessário
-- React Hook Form + Zod para formulários
-- Zustand apenas para estado efêmero/local de UI
-- Lucide Icons
-- next-themes
+- Pacote interno `@orbit/design-system`, Lucide e fontes locais.
+- Formulários de acesso e dashboard demonstrativos, sem integração com a API.
+- React Hook Form, Zod e TanStack Query são opções já consideradas para formulários e estado remoto. A decisão fica para quando houver integração.
 
 ### Backend — `apps/api`
-- NestJS 12, ESM
-- Fastify adapter
-- OpenAPI/Swagger
-- Zod/Standard Schema nos limites de entrada
-- arquitetura por módulos de domínio
-- rate limiting
-- health/readiness endpoints
+- NestJS 12, ESM e Fastify, com módulos de domínio.
+- `GET /api/v1/health`, CORS restrito, Helmet e rate limiting em memória.
+- Validação de DTOs via `ValidationPipe`, `class-validator` e `class-transformer`.
+- Readiness, endpoints de negócio e OpenAPI ficam para ciclos posteriores.
 
 ### Dados
-- PostgreSQL gerenciado por Supabase
-- Supabase Auth
-- Supabase Storage
-- Row Level Security (RLS)
-- Drizzle ORM + SQL migrations versionadas
-- pgvector para embeddings quando RAG for habilitado
+- PostgreSQL e Drizzle com migrations SQL versionadas e driver `pg`.
+- Neon PostgreSQL Free é o banco da hospedagem planejada. O banco local é opcional.
+- Identidade externa, armazenamento de objetos e RLS ficam para os ciclos correspondentes.
+- pgvector para embeddings quando RAG for habilitado.
 
 ### Jobs e cache
-- Upstash Redis ou Redis compatível em produção
-- BullMQ para tarefas assíncronas pesadas
+- Upstash Redis ou Redis compatível em produção — pendente
+- BullMQ para tarefas assíncronas pesadas — pendente
 - no desenvolvimento inicial, jobs podem rodar inline atrás de uma interface de queue
 
-### IA
+### IA (planejada)
 - `AiProvider` abstrato dentro da API
 - primeiro provider: OpenAI API
 - structured outputs para respostas consumidas pelo sistema
@@ -54,38 +46,26 @@ Arquitetura **modular monolith** em monorepo. É uma estrutura profissional, sim
 - nenhuma chave de IA no cliente
 
 ### Observabilidade
-- OpenTelemetry
-- Sentry (front e API)
-- logs estruturados (Pino)
-- correlation/request id
+- OpenTelemetry — plano de instrumentação a definir
+- Sentry (front e API) — plano a definir
+- logs estruturados (Pino) — já implementado
+- correlation/request id — já implementado
 
 ### Testes
-- Vitest: unitários e integração
-- Playwright: E2E web
-- Testcontainers quando necessário para integração com Postgres/Redis
+- `node:test`, injeção HTTP do Fastify e dublês de persistência na API.
+- Integração com Postgres real, Playwright e Testcontainers permanecem no planejamento.
 
-### CI/CD
-- GitHub Actions
-- Web: Vercel
-- API: Railway, Render ou Fly.io (container Docker)
-- Banco/Auth/Storage: Supabase
+### Hospedagem e CI
+- Hospedagem pendente de provisionamento e smoke. Consulte o [runbook](DEPLOYMENT.md).
+- GitHub Actions permanece no planejamento.
 
-## Diagrama de containers
+## Topologia de hospedagem planejada
 
 ```mermaid
 flowchart LR
-  U[Usuário] --> W[Next.js Web]
-  W --> A[NestJS API]
-  W --> SA[Supabase Auth]
-  A --> DB[(PostgreSQL / Supabase)]
-  A --> ST[Supabase Storage]
-  A --> Q[Queue Adapter]
-  Q --> R[(Redis)]
-  Q --> WK[Worker]
-  A --> AI[AiProvider]
-  AI --> OA[OpenAI API]
-  WK --> AI
-  DB --> V[pgvector]
+  U[Usuário] --> W[Next.js / Vercel Hobby]
+  W -. integração futura .-> A[NestJS / Render Free]
+  A --> DB[(Neon PostgreSQL Free)]
 ```
 
 ## Monorepo
@@ -93,26 +73,25 @@ flowchart LR
 ```text
 orbit/
 ├─ apps/
-│  ├─ web/
-│  ├─ api/
-│  └─ worker/              # só quando queue real for ativada
+│  ├─ web/          Next.js 16, App Router, Tailwind CSS 4
+│  ├─ api/          NestJS 12, Fastify, ESM
+│  └─ worker/       # só quando fila real for ativada
 ├─ packages/
 │  ├─ contracts/           # schemas e DTOs compartilhados
 │  ├─ design-system/       # tokens + componentes Orbit
 │  ├─ config-eslint/
 │  ├─ config-typescript/
-│  └─ observability/
-├─ infra/
-│  ├─ docker/
-│  └─ supabase/
+│  └─ observability/     # pendente instrumentação
 ├─ docs/
-├─ .github/workflows/
-├─ package.json            # npm workspaces
+├─ .github/workflows/     # CI planejado
+├─ package.json            # npm workspaces, engines Node >=24.15.0 <25, npm >=10.9 <12
 ├─ package-lock.json
 └─ turbo.json
 ```
 
-## Módulos da API
+## Módulos de domínio previstos
+
+A estrutura abaixo representa a evolução planejada. Veja [o estado atual da API](API.md).
 
 ```text
 src/modules/
@@ -133,14 +112,11 @@ src/modules/
 
 Cada módulo deve conter seu domínio, application services/use cases, adapters/repositories e controllers. Não importe internals de outro módulo; use serviços públicos, eventos ou contratos.
 
-## Fluxo de autenticação
+## Fluxo de autenticação planejado
 
-1. Web autentica via Supabase Auth.
-2. Web recebe sessão/JWT.
-3. Requisições à API levam Bearer token.
-4. API valida assinatura/claims.
-5. `userId` da sessão define o escopo.
-6. RLS no Postgres funciona como segunda barreira para caminhos que usam Supabase diretamente.
+1. A web inicia a sessão com o serviço de identidade a selecionar.
+2. A API valida a identidade em cada rota protegida e resolve o UUID interno associado ao emissor e ao identificador externo.
+3. Consultas e mutações são limitadas ao usuário identificado. RLS será uma barreira adicional em tabelas de usuário, com identidade restrita à transação e papel de runtime sem bypass.
 
 ## Princípios arquiteturais
 

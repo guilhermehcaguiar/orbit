@@ -2,7 +2,7 @@
 
 Base: `/api/v1`
 
-## Implementado na etapa 3A
+## Contrato implementado
 
 `GET /api/v1/health` retorna HTTP 200:
 
@@ -14,7 +14,12 @@ Base: `/api/v1`
 }
 ```
 
-O ambiente vem de `NODE_ENV` validado. O CORS usa `FRONTEND_URL`. DTOs futuros
+O ambiente vem de `NODE_ENV` validado. Com banco configurado, `database: up`
+indica que `SELECT 1` passou durante o boot. Sem banco configurado, o campo é
+omitido. Uma falha de conexão inicial impede o boot. O endpoint não consulta
+o banco a cada requisição.
+
+O CORS usa `FRONTEND_URL`. DTOs futuros
 passam pela validação global. O formato atual de erro é:
 
 ```json
@@ -47,7 +52,7 @@ implementados. Os caminhos são relativos a `/api/v1`.
 
 ### System
 - `GET /health` (já implementado)
-- `GET /ready`
+- `GET /ready` (prontidão futura, com verificação de dependências críticas)
 
 ### Me
 - `GET /me`

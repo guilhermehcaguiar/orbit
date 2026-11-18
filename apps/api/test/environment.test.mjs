@@ -14,6 +14,20 @@ test('configuration accepts explicit production values and parses the port', () 
   }), { NODE_ENV: 'production', API_PORT: 8080, FRONTEND_URL: 'https://orbit.example', DATABASE_URL: '' });
 });
 
+test('configuration accepts PORT by itself', () => {
+  assert.equal(validateEnvironment({ PORT: '10000' }).API_PORT, 10000);
+});
+
+test('configuration prefers PORT over API_PORT', () => {
+  assert.equal(validateEnvironment({ PORT: '10000', API_PORT: '3001' }).API_PORT, 10000);
+});
+
+test('configuration rejects an invalid PORT even when API_PORT is valid', () => {
+  for (const PORT of ['', '0', '65536', '1000.5', 'abc', ' 10000 ', null]) {
+    assert.throws(() => validateEnvironment({ PORT, API_PORT: '3001' }), /\bPORT\b/);
+  }
+});
+
 test('configuration accepts valid DATABASE_URL', () => {
   assert.deepEqual(validateEnvironment({
     NODE_ENV: 'development', API_PORT: '3001', FRONTEND_URL: 'http://localhost:3000',

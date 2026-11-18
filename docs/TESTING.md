@@ -1,6 +1,16 @@
 # Estratégia de Testes
 
-## Pirâmide
+## Verificações disponíveis
+
+- `npm run lint`, `npm run typecheck`, `npm run test` e `npm run build`.
+- A API usa `node:test`, injeção HTTP do Fastify e dublês de persistência.
+  Cobre porta e precedência de configuração, health, CORS, validação,
+  tratamento de erros, ID de requisição, repositório e lifecycle do pool.
+- `npm run db:check --workspace @orbit/api` verifica o histórico local de migrations.
+- O [runbook](DEPLOYMENT.md) descreve o smoke HTTP local e os smokes externos
+  pendentes. A web ainda não tem uma suíte automatizada.
+
+## Pirâmide planejada
 
 ### Unitários
 - scoring de prioridade;
@@ -25,7 +35,7 @@ Playwright cobrindo fluxos críticos:
 6. visualizar dashboard atualizado;
 7. gerar e aceitar plano inteligente.
 
-## Gates no CI
+## Gates de CI planejados
 
 - format check;
 - lint;

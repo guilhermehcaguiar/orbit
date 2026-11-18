@@ -1,13 +1,12 @@
 # Roadmap de Implementação
 
 ## Fase 0 — Fundação
-- monorepo;
-- configs compartilhadas;
-- CI;
-- Supabase local/projeto;
-- auth;
-- design tokens;
-- shell do app.
+
+- Implementado: monorepo, configurações compartilhadas, design system, landing, telas visuais de acesso, shell, dashboard demonstrativo, healthcheck e persistência de perfis.
+- Preparação de hospedagem: compatibilidade com `PORT` do Render, pool da API e [runbook](DEPLOYMENT.md) para Vercel Hobby, Render Free e Neon PostgreSQL Free.
+- Pendente: provisionar ambiente de demonstração, aplicar a migration autorizada em banco isolado e executar os smokes externos.
+- Pendente: configurar CI com lint, typecheck, testes e build.
+- Antes de dados reais: integrar identidade e sessão, proteger rotas, testar ownership e RLS, revisar rate limiting atrás do proxy, minimizar dados em logs e definir recuperação do banco.
 
 ## Fase 1 — Core acadêmico
 - onboarding;
@@ -35,7 +34,7 @@
 ## Fase 4 — Materiais/RAG
 - upload;
 - processamento;
-- busca vetorial;
+- busca vetorial (pgvector);
 - resumo;
 - tutor contextual.
 

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DatabaseModule } from '../dist/database/database.module.js';
@@ -69,12 +69,35 @@ test('configured database provides a usable ORM and the correct repository throu
   assert.equal(service.getDatabase(), null);
 });
 
-test('database initialization failure releases the pool and propagates the error', async (t) => {
-  const service = new DatabaseService(createMockConfig('postgresql://test:test@localhost:5432/test'));
-  const error = new Error('connection refused');
-  t.mock.method(service.getClient(), 'query', async () => { throw error; });
+const testDatabaseUrl = 'postgresql://test:fixture-password@localhost:5432/test';
+
+test('an idle pool error is handled and logged without connection details', async (t) => {
+  const service = new DatabaseService(createMockConfig(testDatabaseUrl));
+  const warn = t.mock.method(Logger.prototype, 'warn', () => {});
+  try {
+    const pool = service.getClient();
+    assert.equal(pool.options.max, 5);
+    assert.equal(pool.options.connectionTimeoutMillis, 5000);
+    assert.doesNotThrow(() => pool.emit('error', new Error(testDatabaseUrl)));
+    assert.equal(warn.mock.callCount(), 1);
+    assert.deepEqual(warn.mock.calls[0].arguments, ['Database pool lost an idle connection']);
+  } finally {
+    await service.onModuleDestroy();
+  }
+});
+
+test('database initialization failure releases the pool and replaces the driver error', async (t) => {
+  const service = new DatabaseService(createMockConfig(testDatabaseUrl));
+  const driverError = new Error(testDatabaseUrl);
+  t.mock.method(service.getClient(), 'query', async () => { throw driverError; });
   const end = t.mock.method(service.getClient(), 'end', async () => {});
-  await assert.rejects(service.onModuleInit(), error);
+  await assert.rejects(service.onModuleInit(), (error) => {
+    assert.notEqual(error, driverError);
+    assert.equal(error.cause, undefined);
+    assert.match(error.message, /Verifique a configuração DATABASE_URL/);
+    assert.doesNotMatch(error.stack, /fixture-password|localhost/);
+    return true;
+  });
   assert.equal(end.mock.callCount(), 1);
   assert.equal(service.isConnected(), false);
   assert.equal(service.getClient(), null);

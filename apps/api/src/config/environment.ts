@@ -11,10 +11,12 @@ export function validateEnvironment(values: Record<string, unknown>): ApiEnviron
     throw new Error('Configuração inválida: NODE_ENV deve ser development, test ou production.');
   }
 
-  const rawPort = values.API_PORT ?? '3001';
-  const port = Number(rawPort);
-  if (!/^\d+$/.test(String(rawPort)) || !Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error('Configuração inválida: API_PORT deve ser um inteiro entre 1 e 65535.');
+  const portKey = values.PORT === undefined ? 'API_PORT' : 'PORT';
+  const rawPort = values[portKey] === undefined ? '3001' : values[portKey];
+  const portText = typeof rawPort === 'string' || typeof rawPort === 'number' ? String(rawPort) : '';
+  const port = Number(portText);
+  if (!/^\d+$/.test(portText) || !Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(`Configuração inválida: ${portKey} deve ser um inteiro entre 1 e 65535.`);
   }
 
   const origin = values.FRONTEND_URL ?? 'http://localhost:3000';
