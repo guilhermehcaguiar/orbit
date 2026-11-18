@@ -1,0 +1,18 @@
+.work-page { display: grid; gap: 1.25rem; }
+.work-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: 1rem; align-items: end; }
+.work-form .work-actions { grid-column: 1 / -1; }
+.work-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.work-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .75rem; }
+.work-ordered { list-style: decimal inside; }
+.work-ordered > li::marker { color: var(--orbit-primary); }
+.work-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1rem; }
+.work-row > div { min-width: 0; }
+.work-row strong, .work-row p, .work-row a { overflow-wrap: anywhere; }
+.work-row p, .work-empty, .work-notice, .focus-panel p { color: var(--orbit-muted); }
+.work-row a, .work-page .orbit-stat-card a { text-underline-offset: .2em; }
+.work-empty { padding: 1rem 0; }
+.work-notice { margin-top: .75rem; }
+.work-confirm { display: grid; gap: .5rem; }
+.work-filter { max-width: 18rem; }
+.focus-panel { display: grid; gap: 1rem; justify-items: center; padding-block: 2.5rem; }
+.focus-panel > strong { font-size: clamp(3rem, 12vw, 6rem); font-variant-numeric: tabular-nums; line-height: 1; }

@@ -8,7 +8,14 @@
 - Pendente: configurar CI com lint, typecheck, testes e build.
 - Antes de dados reais: integrar identidade e sessão, proteger rotas, testar ownership e RLS, revisar rate limiting atrás do proxy, minimizar dados em logs e definir recuperação do banco.
 
-## Fase 1 — Core acadêmico
+## MVP local
+
+O workspace em `/app` permite organizar disciplinas, tarefas, provas e eventos,
+acompanhar uma agenda mensal, usar o Pomodoro e consultar estatísticas e um
+plano por prazos. Preferências e registros são salvos no navegador. Valide o
+fluxo com o MVP local antes de integrar identidade, banco e hospedagem.
+
+## Fase 1 — Evolução do core acadêmico
 - onboarding;
 - semestres;
 - disciplinas;

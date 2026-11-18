@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Ellipsis, GraduationCap } from 'lucide-react';
 import { Sidebar, SidebarItem } from '@orbit/design-system';
 import { navigationIcons } from '@/constants/icons';
-import { mobileNavigation, navigation } from '@/mocks/navigation';
+import { mobileNavigation, navigation } from '@/features/workspace/navigation';
 import { Brand } from './brand';
 import { PreviewDialog } from './preview-dialog';
 

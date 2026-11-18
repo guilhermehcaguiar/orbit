@@ -2,11 +2,10 @@
 
 **Seu foco em órbita.**
 
-Plataforma acadêmica para estudantes, planejada para organizar matérias, horários,
-provas, tarefas, Pomodoro e recursos de IA. O projeto contém uma landing page pública, telas visuais de login e cadastro,
-um dashboard com dados mockados, o design system e a API de saúde. A camada de
-persistência Drizzle/PostgreSQL foi preparada na etapa anterior. Os módulos de
-navegação adicionais são prévias visuais.
+Plataforma acadêmica para organizar disciplinas, provas, tarefas e sessões de
+foco. O MVP funciona no navegador, sem necessidade de conta ou API. Os
+registros persistem no perfil atual do navegador e são removidos se os dados
+do site forem limpos. A landing inclui uma prévia ilustrativa do produto.
 
 ## Requisitos
 
@@ -116,38 +115,26 @@ Vercel Hobby para a web, Render Free para a API e Neon PostgreSQL Free para o
 banco. Consulte o [runbook de deploy](docs/DEPLOYMENT.md) e o [ADR-006](docs/DECISIONS.md#adr-006--postgresql-convencional-e-hospedagem-da-demonstração).
 O provisionamento e os testes nos provedores pertencem a uma etapa posterior.
 
-## Fundação visual
+## Usar o MVP local
 
-O dashboard inicia em modo escuro e usa Sora nos títulos e Inter na interface,
-hospedadas localmente pelo Next.js. Tokens e componentes ficam em
-`packages/design-system`; mocks, layouts e componentes do dashboard ficam em
-`apps/web/src`. As interações usam apenas estado local, sem persistência ou
-chamadas ao backend.
+Execute `npm run dev --workspace @orbit/web` na raiz e acesse
+`http://localhost:3000/app`. Cadastre uma disciplina, associe uma tarefa e
+uma prova, confira a agenda e experimente o Pomodoro.
 
-Consulte `docs/VISUAL_FOUNDATION.md` para o inventário de arquivos, componentes,
-decisões e validações visuais, incluindo as rotas públicas.
-
-Consulte `docs/BACKEND_FOUNDATION.md` para a estrutura e as decisões da etapa 3A.
-
-## Rotas e fluxo público
-
-| Rota | Estado atual |
+| Rota | Funcionalidade |
 | --- | --- |
-| `/` | Landing pública: benefícios, recursos, como funciona, IA futura e CTAs |
-| `/login` | Formulário visual de e-mail e senha; sem autenticação |
-| `/cadastro` | Formulário visual de nome, e-mail e confirmação de senha |
-| `/app` | Dashboard existente, livre para explorar com dados demonstrativos |
-| `/subjects` | Prévia de disciplinas |
-| `/calendar`, `/tasks`, `/exams`, `/pomodoro`, `/ai`, `/statistics`, `/settings` | Prévias dos módulos existentes |
+| `/` | Landing e entrada para o workspace local |
+| `/app` | Dashboard com dados do navegador |
+| `/subjects` | Gerenciar disciplinas |
+| `/tasks` | Gerenciar tarefas, concluir, reabrir e filtrar |
+| `/exams` | Gerenciar provas com data e disciplina opcional |
+| `/calendar` | Agenda mensal de tarefas, provas e eventos próprios |
+| `/pomodoro` | Cronômetro de foco e pausa com histórico de conclusões |
+| `/ai` | Plano de estudos local ordenado por prazos |
+| `/statistics` | Tempo de foco, sessões e tarefas concluídas |
+| `/settings` | Nome de exibição e duração de foco e pausa |
+| `/login`, `/cadastro` | Protótipos visuais de autenticação |
 
-Fluxo atual: landing → login/cadastro → mensagem de integração futura. Os
-formulários validam campos no navegador, impedem envio real e não armazenam
-senhas ou dados em localStorage. Recuperação de senha também apenas informa sua
-ativação futura. O dashboard é acessível pelo link “Abrir prévia”, sem sessão ou
-proteção de rota. Fluxo previsto após a etapa de autenticação: landing → acesso
-real → dashboard protegido. Nenhuma integração de API, IA, OAuth ou deploy foi
-adicionada nesta etapa.
-
-A landing e as telas de acesso usam o layout público; o grupo `(workspace)`
-compartilha o AppShell entre o dashboard e os módulos sem alterar as URLs destes.
-Metadados específicos estão definidos para `/`, `/login`, `/cadastro` e `/app`.
+O tema usa Sora, Inter e o design system em `packages/design-system`. Veja
+[Fundação visual](docs/VISUAL_FOUNDATION.md) e
+[Fundação da API](docs/BACKEND_FOUNDATION.md) para os registros anteriores.
