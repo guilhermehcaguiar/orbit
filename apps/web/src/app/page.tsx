@@ -1,30 +1,57 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, CalendarDays, Check, ClipboardList, Clock3, ListTodo, ChartNoAxesCombined, Sparkles, Timer, Target } from 'lucide-react';
-import { Badge } from '@orbit/design-system';
-import { Navbar } from '@/components/public/navbar';
+import { ArrowDown, ArrowUpRight, BookOpen, CalendarDays, Check, ClipboardList, ListTodo, Timer, TrendingUp } from 'lucide-react';
 import { Footer } from '@/components/public/footer';
-import { FeatureCard } from '@/components/public/feature-card';
+import { Navbar } from '@/components/public/navbar';
 import { ProductPreview } from '@/components/public/product-preview';
 
-export const metadata: Metadata = { title: 'Orbit — Seu foco em órbita', description: 'Plataforma para organizar estudos, matérias, tarefas, provas e sessões de foco.' };
-const features = [
-  { icon: BookOpen, title: 'Disciplinas', description: 'Cadastre suas matérias e acompanhe as tarefas vinculadas.' },
-  { icon: CalendarDays, title: 'Calendário', description: 'Reúna eventos, provas e prazos em uma agenda mensal.' },
-  { icon: ListTodo, title: 'Tarefas', description: 'Listas e prazos para transformar grandes objetivos em pequenos passos.' },
-  { icon: ClipboardList, title: 'Provas', description: 'Avaliações em perspectiva, com tempo para se preparar com tranquilidade.' },
-  { icon: Timer, title: 'Pomodoro', description: 'Use o temporizador e acompanhe as sessões de foco concluídas.' },
-  { icon: ChartNoAxesCombined, title: 'Estatísticas', description: 'Acompanhe tarefas concluídas e seu tempo de foco.' },
-  { icon: Sparkles, title: 'Plano inteligente', description: 'Uma futura camada de IA para apoiar seu planejamento de estudos.' },
+export const metadata: Metadata = {
+  title: 'Orbit — Organizador de estudos',
+  description: 'Organize disciplinas, tarefas e provas, consulte sua agenda e acompanhe as sessões de foco.',
+};
+
+const tools = [
+  { icon: BookOpen, title: 'Disciplinas', description: 'Organize as matérias e vincule suas tarefas e provas.', route: '/subjects' },
+  { icon: CalendarDays, title: 'Calendário', description: 'Consulte compromissos e prazos na agenda mensal.', route: '/calendar' },
+  { icon: ListTodo, title: 'Tarefas', description: 'Cadastre prazos e acompanhe o que falta concluir.', route: '/tasks' },
+  { icon: ClipboardList, title: 'Provas', description: 'Registre as datas das próximas avaliações.', route: '/exams' },
+  { icon: Timer, title: 'Pomodoro', description: 'Alterne sessões de foco e pausas configuráveis.', route: '/pomodoro' },
+  { icon: TrendingUp, title: 'Estatísticas', description: 'Acompanhe o tempo de foco e as tarefas concluídas.', route: '/statistics' },
 ];
+
 export default function Home() {
-  return <div className="public-site"><a className="skip-link" href="#main-content">Pular para o conteúdo</a><Navbar /><main id="main-content" tabIndex={-1}>
-    <section className="hero public-container" aria-labelledby="hero-title"><div className="hero-orbit" aria-hidden="true" /><span className="hero-label"><span />SEU PRÓXIMO PASSO COMEÇA AQUI</span><h1 id="hero-title">Coloque seus estudos<br className="desktop-break" /> <span>em órbita.</span></h1><p>Organize matérias, provas, tarefas, horários e sessões de foco em um só lugar.</p><div className="hero-actions"><Link href="/app" className="orbit-button orbit-button--primary">Começar agora <ArrowRight size={18} aria-hidden="true" /></Link><a href="#recursos" className="orbit-button orbit-button--secondary">Conhecer recursos</a></div><div className="hero-note"><Check size={15} aria-hidden="true" />Seus registros ficam neste navegador.</div></section>
-    <div className="public-container"><ProductPreview /></div>
-    <section id="produtividade" className="public-section public-container" aria-labelledby="benefits-title"><div className="section-heading"><span className="section-eyebrow">MENOS RUÍDO. MAIS DIREÇÃO.</span><h2 id="benefits-title">Abra espaço para o seu foco.</h2><p>Uma rotina de estudos mais clara começa com tudo no lugar certo.</p></div><div className="benefits-grid"><FeatureCard icon={BookOpen} title="Organize tudo" description="A proposta é simples: matérias, tarefas, provas e horários em um só lugar." /><FeatureCard icon={Target} title="Estude com foco" description="Intercale sessões de foco e pausas com o Pomodoro." /><FeatureCard icon={Clock3} title="Saiba o que priorizar" description="O dashboard reúne seus compromissos e tarefas pendentes." /><FeatureCard icon={Sparkles} title="Planejamento inteligente" description="Uma interface preparada para futuros planos de estudo com IA." planned /></div></section>
-    <section id="como-funciona" className="public-section steps-section" aria-labelledby="steps-title"><div className="public-container"><div className="section-heading"><span className="section-eyebrow">DO PLANO À CONSTÂNCIA</span><h2 id="steps-title">Seu ritmo. Seu caminho.</h2><p>Três passos que guiam a experiência que estamos construindo.</p></div><ol className="steps-grid">{[['Organize sua rotina', 'Reúna suas matérias e visualize os compromissos da semana.'], ['Planeje seus estudos', 'Defina prioridades e reserve espaço para cada objetivo.'], ['Acompanhe sua evolução', 'Entenda seu ritmo e ajuste o próximo passo com clareza.']].map(([title, description], i) => <li key={title}><span className="step-number">0{i + 1}</span><h3>{title}</h3><p>{description}</p></li>)}</ol></div></section>
-    <section id="recursos" className="public-section public-container" aria-labelledby="features-title"><div className="section-heading"><span className="section-eyebrow">UM LUGAR PARA CADA PARTE DO SEU DIA</span><h2 id="features-title">Tudo conectado ao seu objetivo.</h2><p>Organize sua rotina com as ferramentas disponíveis no seu espaço de estudos.</p></div><div className="features-grid">{features.map((feature, i) => <FeatureCard {...feature} planned={i === features.length - 1} key={feature.title} />)}</div></section>
-    <section id="ia" className="public-container ai-section" aria-labelledby="ai-title"><div className="ai-copy"><Badge tone="primary"><Sparkles size={14} aria-hidden="true" />IA · Em breve</Badge><h2 id="ai-title">Um plano de estudos que evolui com você.</h2><p>Estamos preparando uma camada inteligente para ajudar você a decidir o próximo passo, respeitando sua rotina e seus objetivos.</p><p>No futuro, o Orbit poderá considerar datas de provas, tarefas, disponibilidade, histórico de estudos e prioridades para sugerir planos de estudo.</p><span className="ai-disclaimer">Conceito em desenvolvimento. Nenhuma IA está ativa nesta etapa.</span></div><div className="plan-concept"><div className="plan-concept-title"><Sparkles size={20} aria-hidden="true" /><strong>Conectando seu contexto</strong></div>{['Datas de provas e tarefas', 'Sua disponibilidade', 'Histórico de estudos', 'Suas prioridades'].map((label, i) => <div className="context-row" key={label}><span>0{i + 1}</span>{label}<Check size={16} aria-hidden="true" /></div>)}<div className="plan-output"><Target size={20} aria-hidden="true" /><div><strong>Um próximo passo mais claro</strong><p>Ilustração de um futuro plano personalizado</p></div></div></div></section>
-    <section className="public-section public-container final-cta" aria-labelledby="cta-title"><span className="section-eyebrow">SEU FOCO MERECE UM NOVO ESPAÇO</span><h2 id="cta-title">Pronto para colocar seus<br className="desktop-break" /> estudos em órbita?</h2><p>Conheça o Orbit e dê o primeiro passo nessa jornada.</p><div className="hero-actions"><Link href="/app" className="orbit-button orbit-button--primary">Abrir meu espaço <ArrowRight size={18} aria-hidden="true" /></Link></div><small>Você pode começar sem criar uma conta.</small></section>
-  </main><Footer /></div>;
+  return <div className="public-site">
+    <a className="skip-link" href="#main-content">Pular para o conteúdo</a>
+    <Navbar />
+    <main id="main-content" tabIndex={-1}>
+      <section className="landing-hero" aria-labelledby="hero-title">
+        <div className="public-container landing-hero-inner">
+          <div className="landing-intro">
+            <h1 id="hero-title">Organizador <span>de estudos.</span></h1>
+            <p>Junte disciplinas, tarefas e provas. Veja os próximos prazos e inicie uma sessão de foco.</p>
+            <div className="landing-actions">
+              <Link href="/app" className="orbit-button orbit-button--primary">Abrir meu espaço <ArrowUpRight size={18} aria-hidden="true" /></Link>
+              <a href="#recursos" className="orbit-button orbit-button--secondary">Ver ferramentas <ArrowDown size={16} aria-hidden="true" /></a>
+            </div>
+            <p className="landing-local"><Check size={16} aria-hidden="true" /> Sem cadastro. Seus registros ficam no navegador.</p>
+          </div>
+          <ProductPreview />
+        </div>
+      </section>
+      <section id="recursos" className="public-container landing-tools" aria-labelledby="features-title">
+        <div className="landing-tools-head"><h2 id="features-title">Ferramentas de estudo</h2><p>Organize o semestre, acompanhe os prazos e veja quanto tempo você estudou.</p></div>
+        <ul>{tools.map(({ icon: Icon, title, description, route }) => <li key={route}>
+          <Link href={route} className="landing-tool"><Icon size={22} aria-hidden="true" />
+            <span><strong>{title}</strong><span>{description}</span></span>
+            <ArrowUpRight className="landing-tool-arrow" size={16} aria-hidden="true" />
+          </Link>
+        </li>)}</ul>
+      </section>
+      <section className="public-container landing-close" aria-labelledby="close-title">
+        <div><h2 id="close-title">Sua primeira disciplina</h2><p>Cadastre uma matéria e organize os próximos prazos a partir dela.</p></div>
+        <Link href="/subjects#novo" className="orbit-button orbit-button--primary">Adicionar disciplina <ArrowUpRight size={18} aria-hidden="true" /></Link>
+      </section>
+    </main>
+    <Footer />
+  </div>;
 }

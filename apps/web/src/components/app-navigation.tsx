@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Ellipsis, GraduationCap } from 'lucide-react';
+import { Ellipsis } from 'lucide-react';
 import { Sidebar, SidebarItem } from '@orbit/design-system';
 import { navigationIcons } from '@/constants/icons';
 import { mobileNavigation, navigation } from '@/features/workspace/navigation';
@@ -18,7 +18,7 @@ export function AppNavigation() {
     return <SidebarItem key={item.href} href={item.href} icon={<Icon size={19} />} active={pathname === item.href}>{item.label}</SidebarItem>;
   };
   return <>
-    <Sidebar brand={<Brand href="/app" />} footer={<div className="sidebar-note"><GraduationCap size={21} aria-hidden="true" /><p>Mais foco hoje.<br /><span>Um futuro maior.</span></p></div>}>
+    <Sidebar brand={<Brand href="/app" />}>
       <p className="nav-label">Seu workspace</p>
       {navigation.filter(item => item.group === 'study').map(renderItem)}
       <div className="sidebar-account">{navigation.filter(item => item.group === 'account').map(renderItem)}</div>
@@ -32,7 +32,7 @@ export function AppNavigation() {
       })}
       <button type="button" onClick={() => setMoreOpen(true)} aria-haspopup="dialog" aria-expanded={moreOpen} className={navigation.some(item => item.href === pathname && !mobileNavigation.includes(item.href)) ? 'is-active' : undefined}><Ellipsis size={21} aria-hidden="true" /><span>Mais</span></button>
     </nav>
-    <PreviewDialog id="mobile-menu" open={moreOpen} onClose={() => setMoreOpen(false)} title="Seu Orbit" description="Tudo o que você precisa, em um só lugar."><nav aria-label="Todos os módulos" className="more-navigation">{navigation.map(item => {
+    <PreviewDialog id="mobile-menu" open={moreOpen} onClose={() => setMoreOpen(false)} title="Navegação"><nav aria-label="Todos os módulos" className="more-navigation">{navigation.map(item => {
       const Icon = navigationIcons[item.icon];
       return <SidebarItem key={item.href} href={item.href} active={pathname === item.href} icon={<Icon size={19} />} onClick={() => setMoreOpen(false)}>{item.label}</SidebarItem>;
     })}</nav></PreviewDialog>

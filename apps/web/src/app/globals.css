@@ -1,7 +1,6 @@
 @import 'tailwindcss';
 @import '@orbit/design-system/styles.css';
 @import '../styles/shell.css';
-@import '../styles/dashboard.css';
 @import '../styles/public.css';
 @import '../styles/workspace.css';
 
@@ -9,7 +8,7 @@
 html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--orbit-bg); color: var(--orbit-text); font-family: var(--orbit-font-body); line-height: var(--orbit-leading); -webkit-font-smoothing: antialiased; }
 h1, h2, h3, p { margin: 0; }
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 button, a, input { -webkit-tap-highlight-color: transparent; }
 a { color: inherit; }
 svg { flex-shrink: 0; }

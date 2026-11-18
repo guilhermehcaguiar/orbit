@@ -52,8 +52,8 @@ Bottom navigation com 4 destinos principais + Mais. Pomodoro deve ser fácil de 
 
 Disponíveis em `@orbit/design-system`: Button, Card, Input, Badge, IconButton,
 Sidebar, SidebarItem, PageHeader, StatCard, ProgressBar, EmptyState, SectionTitle,
-Avatar, SearchInput, ThemeToggle e Tooltip. ThemeProvider controla o tema apenas
-em memória, com dark mode padrão. As props tipadas são exportadas pelo pacote.
+Avatar, SearchInput, ThemeToggle e Tooltip. ThemeProvider salva a preferência por tema
+no navegador, com dark mode padrão. As props tipadas são exportadas pelo pacote.
 
 A implementação usa tokens CSS em `packages/design-system/src/styles/tokens.css`.
 Importe `@orbit/design-system/styles.css` uma vez no CSS global do aplicativo.
@@ -90,16 +90,19 @@ contraste. A identidade visual principal permanece escura.
 
 Abrir `design/orbit-brand-board.png` antes de implementar UI.
 
-## Composição pública
+## Landing e workspace
 
-Landing e acesso usam os mesmos tokens, fontes locais, Card, Badge, Button e Input.
-Não foram alterados contratos ou tokens do pacote compartilhado. Navbar, Footer,
-FeatureCard, ProductPreview e AuthCard ficam no frontend; `styles/public.css`
-organiza a composição e os breakpoints. O mockup reutiliza SubjectCard e dados
-existentes, sem duplicar lógica interativa do dashboard.
+A landing apresenta as práticas de estudo que já funcionam no navegador. A
+demonstração interativa do workspace apresenta agenda, tarefas e Pomodoro, com a órbita em CSS
+e entrada breve que respeita a preferência por movimento reduzido. O mesmo
+grid alinha a apresentação, as ferramentas e o rodapé.
 
-Conteúdo público com largura máxima de 1160 px, hero centralizada, benefícios em
-4/2/1 colunas e recursos em 3/2/1 colunas. A navegação muda para menu expansível
-abaixo de 800 px, com Escape e retorno de foco. Login/cadastro usam card em duas
-colunas no desktop e uma coluna no tablet/mobile. Brilho discreto só na prévia;
-IA futura sempre acompanhada por indicação de disponibilidade.
+No workspace, a visão inicial reúne prazos, compromissos dos próximos sete
+dias e o Pomodoro. O calendário combina uma grade mensal com os compromissos
+do dia ou do mês. Disciplinas mostram progresso por matéria, tarefas e provas
+usam filtros próprios e o plano de estudos ordena prioridades por prazo.
+
+Os formulários de edição abrem em diálogos com foco no primeiro campo e
+retorno de foco ao fechar. O Pomodoro mostra o tempo restante em números e
+no anel de progresso. As estatísticas exibem o tempo registrado por dia.
+Os modos claro e escuro compartilham os tokens e o layout.
