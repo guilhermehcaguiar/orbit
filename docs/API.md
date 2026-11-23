@@ -33,7 +33,26 @@ passam pela validação global. O formato atual de erro é:
 ```
 
 `message` também pode ser uma lista de mensagens de validação. Falhas internas
-recebem mensagem genérica, sem stack trace. Não há endpoints de negócio.
+recebem mensagem genérica, sem stack trace.
+
+### Sessão e workspace
+
+| Método e caminho | Contrato |
+| --- | --- |
+| `POST /auth/register` | Cria a conta a partir de `name`, `email` e `password`. Retorna `account` e `token` para o cliente servidor. |
+| `POST /auth/login` | Autentica com `email` e `password`. Retorna `account` e `token`. |
+| `POST /auth/logout` | Revoga a sessão apresentada. Retorna HTTP 204. |
+| `GET /me` | Retorna `id`, `name` e `email` da conta autenticada. |
+| `GET /workspace` | Retorna `{ revision, workspace }`. |
+| `PUT /workspace` | Valida e salva atomicamente `{ revision, workspace }`. Responde HTTP 409 quando a revisão diverge. |
+| `POST /workspace/import` | Mescla os registros de `{ revision, workspace }` por identificador e preserva os registros da conta. |
+| `GET /subjects`, `/tasks`, `/assessments` | Lista a coleção da conta e sua revisão. Com `/:id`, retorna um único registro. |
+| `POST`, `PATCH` e `DELETE` nas coleções | Criação com `{ revision, record }`, alteração parcial em `/:id` com o mesmo envelope e remoção com `{ revision }`. |
+
+Rotas protegidas usam `Authorization: Bearer <token>`. A web usa
+`/api/orbit/*` na própria origem, com cookie HttpOnly e verificação de origem
+para mutações. O servidor web apresenta o token à API. Opcionalmente,
+`X-Orbit-Account` detecta uma troca de conta entre a leitura e a escrita.
 
 ## Planejamento futuro
 
@@ -43,7 +62,7 @@ implementados. Os caminhos são relativos a `/api/v1`.
 ### Convenções
 - JSON.
 - datas ISO 8601.
-- autenticação Bearer JWT.
+- autenticação Bearer com sessão opaca rotativa a cada login.
 - erros no formato Problem Details-like.
 - paginação por cursor nas coleções grandes.
 - idempotency key em operações críticas futuras.
@@ -55,7 +74,6 @@ implementados. Os caminhos são relativos a `/api/v1`.
 - `GET /ready` (prontidão futura, com verificação de dependências críticas)
 
 ### Me
-- `GET /me`
 - `PATCH /me`
 
 ### Semesters
@@ -66,11 +84,6 @@ implementados. Os caminhos são relativos a `/api/v1`.
 - `DELETE /semesters/:id`
 
 ### Subjects
-- `GET /subjects`
-- `POST /subjects`
-- `GET /subjects/:id`
-- `PATCH /subjects/:id`
-- `DELETE /subjects/:id`
 - `GET /subjects/:id/overview`
 
 ### Schedules
@@ -80,19 +93,7 @@ implementados. Os caminhos são relativos a `/api/v1`.
 - `DELETE /subject-schedules/:id`
 
 ### Tasks
-- `GET /tasks`
-- `POST /tasks`
-- `GET /tasks/:id`
-- `PATCH /tasks/:id`
 - `POST /tasks/:id/complete`
-- `DELETE /tasks/:id`
-
-### Assessments
-- `GET /assessments`
-- `POST /assessments`
-- `GET /assessments/:id`
-- `PATCH /assessments/:id`
-- `DELETE /assessments/:id`
 
 ### Focus
 - `POST /focus-sessions/start`

@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ComponentProps, type ReactNode } from 'react';
+import Link from 'next/link';
 import { X, type LucideIcon } from 'lucide-react';
 import { IconButton } from '@orbit/design-system';
 
@@ -56,4 +57,16 @@ export function EditorDialog({ title, onClose, children, focusField }: {
     <header><h2 id={id}>{title}</h2><IconButton label="Fechar diálogo" onClick={onClose}><X size={20} aria-hidden="true" /></IconButton></header>
     {children}
   </dialog>;
+}
+
+
+export function RecordLink({ href, onClick, ...props }: Omit<ComponentProps<typeof Link>, 'href'> & { href: string }) {
+  return <Link {...props} href={href} onClick={event => {
+    onClick?.(event);
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    const [pathname, hash] = href.split('#');
+    if (!hash || pathname !== window.location.pathname) return;
+    event.preventDefault();
+    window.location.hash = hash;
+  }} />;
 }

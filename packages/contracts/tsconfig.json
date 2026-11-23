@@ -1,0 +1,5 @@
+{
+  "extends": "@orbit/config-typescript/base.json",
+  "compilerOptions": { "noEmit": true, "incremental": true, "module": "NodeNext", "moduleResolution": "NodeNext" },
+  "include": ["src/**/*.ts"]
+}

@@ -18,8 +18,7 @@ export class ProfilesRepository {
     return this.database;
   }
 
-  async findById(id: string): Promise<Profile | null> {
-    const db = this.assertDatabase();
+  async findById(id: string, db = this.assertDatabase() as Pick<Database, 'select'>): Promise<Profile | null> {
     const result = await db.select()
       .from(schema.profiles)
       .where(eq(schema.profiles.id, id))
@@ -36,8 +35,7 @@ export class ProfilesRepository {
     return result[0] ?? null;
   }
 
-  async create(profile: NewProfile): Promise<Profile> {
-    const db = this.assertDatabase();
+  async create(profile: NewProfile, db = this.assertDatabase() as Pick<Database, 'insert'>): Promise<Profile> {
     const result = await db.insert(schema.profiles).values(profile).returning();
     const created = result[0];
     if (!created) {

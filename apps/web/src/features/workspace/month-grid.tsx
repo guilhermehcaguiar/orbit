@@ -2,13 +2,13 @@
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button, IconButton } from '@orbit/design-system';
-import { localDate, type Entry } from './store';
+import { localDate } from './store';
 
-export function MonthGrid({ month, today, selection, entries, onMonth, onDate }: {
+export function MonthGrid({ month, today, selection, countFor, onMonth, onDate }: {
   month: string;
   today: string;
   selection: string;
-  entries: Entry[];
+  countFor: (date: string) => number;
   onMonth: (month: string) => void;
   onDate: (date: string) => void;
 }) {
@@ -41,11 +41,11 @@ export function MonthGrid({ month, today, selection, entries, onMonth, onDate }:
         const day = index - offset + 1;
         if (day < 1 || day > daysInMonth) return <span className="month-outside" key={index} aria-hidden="true" />;
         const date = `${month}-${String(day).padStart(2, '0')}`;
-        const items = entries.filter(entry => entry.date === date);
+        const count = countFor(date);
         const dateLabel = new Date(`${date}T12:00:00`).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' });
-        return <button className="month-day" key={date} type="button" aria-current={date === today ? 'date' : undefined} aria-pressed={date === selection} aria-label={`${dateLabel}, ${items.length} ${items.length === 1 ? 'compromisso' : 'compromissos'}`} onClick={() => onDate(date)}>
+        return <button className="month-day" key={date} type="button" aria-current={date === today ? 'date' : undefined} aria-pressed={date === selection} aria-label={`${dateLabel}, ${count} ${count === 1 ? 'compromisso' : 'compromissos'}`} onClick={() => onDate(date)}>
           <span>{day}</span>
-          {items.length > 0 && <span className="month-mark" aria-hidden="true">{items.length}</span>}
+          {count > 0 && <span className="month-mark" aria-hidden="true">{count}</span>}
         </button>;
       })}
     </div>

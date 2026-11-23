@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: orbit
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build:deploy
+    startCommand: node scripts/start-deploy.mjs
+    healthCheckPath: /api/orbit/health
+    autoDeployTrigger: "off"
+    envVars:
+      - key: DATABASE_URL
+        sync: false

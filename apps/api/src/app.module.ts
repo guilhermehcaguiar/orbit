@@ -15,6 +15,7 @@ import { ExamsModule } from './modules/exams/exams.module.js';
 import { FocusModule } from './modules/focus/focus.module.js';
 import { StudyPlansModule } from './modules/study-plans/study-plans.module.js';
 import { AiModule } from './modules/ai/ai.module.js';
+import { WorkspaceModule } from './modules/workspace/workspace.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 
 @Module({
@@ -41,6 +42,7 @@ import { HealthModule } from './modules/health/health.module.js';
     StudyPlansModule,
     AiModule,
     HealthModule,
+    WorkspaceModule,
   ],
 })
 export class AppModule implements NestModule {

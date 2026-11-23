@@ -30,7 +30,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     if (statusCode >= 500) {
-      this.logger.error(exception instanceof Error ? exception.stack : 'Unhandled server error');
+      this.logger.error('HTTP request failed', { statusCode, requestId: context.getRequest<{ requestId?: string }>().requestId });
     }
 
     httpAdapter.reply(context.getResponse(), {

@@ -16,7 +16,8 @@ export async function configureApp(app: NestFastifyApplication): Promise<void> {
   await app.register(import('@fastify/rate-limit'), {
     max: 100,
     timeWindow: '1 minute',
-    allowList: ['127.0.0.1', '::1'],
+    // The combined deployment proxies all API traffic over loopback.
+    allowList: process.env.ORBIT_API_LOOPBACK === '1' ? [] : ['127.0.0.1', '::1'],
   });
 
   app.setGlobalPrefix('api');

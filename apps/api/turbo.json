@@ -2,6 +2,7 @@
   "$schema": "https://turborepo.com/schema.json",
   "extends": ["//"],
   "tasks": {
+    "test": { "dependsOn": ["build"] },
     "dev": {
       "passThroughEnv": ["PORT", "DATABASE_URL"]
     }

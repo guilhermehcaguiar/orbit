@@ -17,19 +17,19 @@ Arquitetura **modular monolith** em monorepo. É uma estrutura profissional, sim
 - React 19.3
 - Tailwind CSS 4.x
 - Pacote interno `@orbit/design-system`, Lucide e fontes locais.
-- Formulários de acesso e dashboard demonstrativos, sem integração com a API.
+- Workspace visitante com armazenamento no navegador e workspace autenticado integrado à API pelo Next.js.
 - React Hook Form, Zod e TanStack Query são opções já consideradas para formulários e estado remoto. A decisão fica para quando houver integração.
 
 ### Backend — `apps/api`
 - NestJS 12, ESM e Fastify, com módulos de domínio.
 - `GET /api/v1/health`, CORS restrito, Helmet e rate limiting em memória.
 - Validação de DTOs via `ValidationPipe`, `class-validator` e `class-transformer`.
-- Readiness, endpoints de negócio e OpenAPI ficam para ciclos posteriores.
+- Sessão, perfil, workspace e coleções acadêmicas estão implementados. Readiness e OpenAPI ficam para ciclos posteriores.
 
 ### Dados
 - PostgreSQL e Drizzle com migrations SQL versionadas e driver `pg`.
 - Neon PostgreSQL Free é o banco da hospedagem planejada. O banco local é opcional.
-- Identidade externa, armazenamento de objetos e RLS ficam para os ciclos correspondentes.
+- Identidade local com credenciais e sessões no banco. RLS nas tabelas de perfil e do workspace. Armazenamento de objetos permanece planejado.
 - pgvector para embeddings quando RAG for habilitado.
 
 ### Jobs e cache
@@ -53,18 +53,20 @@ Arquitetura **modular monolith** em monorepo. É uma estrutura profissional, sim
 
 ### Testes
 - `node:test`, injeção HTTP do Fastify e dublês de persistência na API.
-- Integração com Postgres real, Playwright e Testcontainers permanecem no planejamento.
+- Integração com PostgreSQL real e testes Playwright no CI.
 
 ### Hospedagem e CI
 - Hospedagem pendente de provisionamento e smoke. Consulte o [runbook](DEPLOYMENT.md).
-- GitHub Actions permanece no planejamento.
+- GitHub Actions executa lint, typecheck, build, testes e verificação de migrations.
 
 ## Topologia de hospedagem planejada
 
 ```mermaid
 flowchart LR
-  U[Usuário] --> W[Next.js / Vercel Hobby]
-  W -. integração futura .-> A[NestJS / Render Free]
+  U[Usuário] --> W
+  subgraph Render[Render Free — um Web Service]
+    W[Next.js na porta pública] --> A[NestJS em loopback]
+  end
   A --> DB[(Neon PostgreSQL Free)]
 ```
 
@@ -83,7 +85,7 @@ orbit/
 │  ├─ config-typescript/
 │  └─ observability/     # pendente instrumentação
 ├─ docs/
-├─ .github/workflows/     # CI planejado
+├─ .github/workflows/     # CI
 ├─ package.json            # npm workspaces, engines Node >=24.15.0 <25, npm >=10.9 <12
 ├─ package-lock.json
 └─ turbo.json
@@ -112,11 +114,15 @@ src/modules/
 
 Cada módulo deve conter seu domínio, application services/use cases, adapters/repositories e controllers. Não importe internals de outro módulo; use serviços públicos, eventos ou contratos.
 
-## Fluxo de autenticação planejado
+## Fluxo de autenticação
 
-1. A web inicia a sessão com o serviço de identidade a selecionar.
-2. A API valida a identidade em cada rota protegida e resolve o UUID interno associado ao emissor e ao identificador externo.
-3. Consultas e mutações são limitadas ao usuário identificado. RLS será uma barreira adicional em tabelas de usuário, com identidade restrita à transação e papel de runtime sem bypass.
+1. A web envia cadastro e login à sua própria origem. O Next.js repassa à API
+   e coloca o token de sessão em cookie HttpOnly.
+2. A API valida o token opaco e resolve o UUID interno em cada rota protegida.
+3. Consultas e mutações usam o UUID para filtrar dados e definir a identidade
+   das políticas RLS na transação. O papel de runtime opera sem bypass.
+4. A revisão do workspace detecta edições concorrentes. A importação mantém
+   os identificadores dos registros do visitante.
 
 ## Princípios arquiteturais
 

@@ -2,104 +2,125 @@
 
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
-import { ArrowUpRight, BookOpen, CalendarDays, CheckSquare, ClipboardList, ListTodo, Play, Plus, Timer } from 'lucide-react';
-import { BlankSlate, WorkspaceHeading } from './presentation';
-import { byDate, displayDate, localDate, useLocalDate, useWorkspace, type Entry } from './store';
+import { ArrowUpRight, BookOpen, CalendarDays, Check, CheckSquare, ClipboardList, Clock, Play, Plus, Timer } from 'lucide-react';
+import { Button } from '@orbit/design-system';
+import { RecordLink, WorkspaceHeading } from './presentation';
+import { LocalImport } from './local-import';
+import { agendaOn, agendaRange, entryHref, entryLabels } from './records';
+import { timeLabel, type Entry } from '@orbit/contracts';
+import { nextClassAfter } from '@orbit/contracts/planner';
+import { byDate, displayDate, localDate, startFocus, updateWorkspace, useLocalDate, useLocalMinute, useWorkspace } from './store';
 
-const entryNames = { task: 'Tarefa', exam: 'Prova', event: 'Evento' };
-const entryIcons = { task: CheckSquare, exam: ClipboardList, event: CalendarDays };
-const entryRoutes = { task: '/tasks', exam: '/exams', event: '/calendar' };
+const agendaLabels = { ...entryLabels, class: 'Aula', study: 'Estudo' };
+const agendaIcons = { task: CheckSquare, exam: ClipboardList, event: CalendarDays, class: Clock, study: BookOpen };
+
+function TaskQueue({ items, overdue = false, onComplete }: { items: Entry[]; overdue?: boolean; onComplete: (id: string) => void }) {
+  if (!items.length) return null;
+  return <section className="ws-panel home-agenda" aria-label={overdue ? 'Tarefas atrasadas' : 'Tarefas sem prazo'}>
+    <div className="ws-section-head"><h2>{overdue ? 'Em atraso' : 'Sem prazo'} <span className="today-count">{items.length}</span></h2>
+      <Link href="/tasks" className="ws-text-link">Ver tarefas</Link>
+    </div>
+    <ul className="entry-list">{items.slice(0, 5).map(item => <li key={item.id} className="entry-row today-row">
+      <span className="entry-icon" data-kind="task"><CheckSquare size={17} aria-hidden="true" /></span>
+      <div className="entry-copy"><RecordLink href={entryHref(item)}>{item.title}</RecordLink>
+        {overdue && <p className="today-overdue">Venceu em {displayDate(item.date)}</p>}</div>
+      <Button size="sm" variant="secondary" aria-label={`Concluir ${item.title}`} onClick={() => onComplete(item.id)}><Check size={15} aria-hidden="true" />Concluir</Button>
+    </li>)}</ul>
+  </section>;
+}
 
 export function Dashboard() {
-  const { name, subjects, entries, focus, focusMinutes } = useWorkspace();
+  const workspace = useWorkspace();
+  const { name, subjects, entries, focus, focusMinutes, plan } = workspace;
   const today = useLocalDate();
+  const clock = useLocalMinute();
+  const nextClass = today ? nextClassAfter(workspace, today, clock) : undefined;
+  const nextStudy = plan?.accepted ? plan.items.find(item => item.date > today || (item.date === today && item.start >= clock)) : undefined;
   const tasks = entries.filter(item => item.kind === 'task' && !item.done);
-  const exams = entries.filter(item => item.kind === 'exam' && item.date >= today);
-  const upcoming = entries.filter(item => item.date && item.date >= today && !item.done).sort(byDate).slice(0, 5);
+  const undated = tasks.filter(item => !item.date);
+  const urgent = today ? tasks.filter(item => item.date && item.date < today).sort(byDate) : [];
+  const nextDeadlines = today ? entries.filter(item => item.date > today && !item.done).sort(byDate).slice(0, 3) : [];
+  const agenda = today ? agendaOn(workspace, today) : [];
+  const week = today ? agendaRange(workspace, today, 7) : [];
+  const firstUse = subjects.length === 0 || !entries.some(item => item.kind !== 'event');
+  const nextFocus = nextStudy ? entries.find(item => item.id === nextStudy.entryId) : urgent[0] ?? tasks.find(item => item.date === today) ?? undated[0];
   const date = today ? new Date(`${today}T12:00:00`).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', weekday: 'long' }) : '';
-  const week = today ? Array.from({ length: 7 }, (_, index) => {
-    const day = new Date(`${today}T12:00:00`);
-    day.setDate(day.getDate() + index);
-    const key = localDate(day);
-    return {
-      key, weekday: day.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''),
-      dayOfMonth: day.getDate(), count: entries.filter(item => item.date === key && !item.done).length,
-    };
-  }) : [];
-  const metrics = [
-    { value: subjects.length, title: 'Disciplinas', icon: BookOpen, route: '/subjects', kind: 'subject' },
-    { value: tasks.length, title: 'Tarefas pendentes', icon: CheckSquare, route: '/tasks', kind: 'task' },
-    { value: exams.length, title: 'Próximas provas', icon: ClipboardList, route: '/exams', kind: 'exam' },
-  ];
+
+  function complete(id: string) {
+    updateWorkspace(current => ({ ...current, entries: current.entries.map(item =>
+      item.kind === 'task' && item.id === id ? { ...item, done: true } : item) }));
+  }
 
   return <div className="ws-page">
-    <WorkspaceHeading title={name ? `Olá, ${name}!` : 'Seu espaço de estudos'} description={date} action={<Link href={subjects.length ? '/tasks#novo' : '/subjects#novo'} className="orbit-button orbit-button--primary"><Plus size={17} aria-hidden="true" />{subjects.length ? 'Nova tarefa' : 'Nova disciplina'}</Link>} />
-    <div className="home-metrics">{metrics.map(({ value, title, icon: Icon, route, kind }) => <Link key={route} href={route} className="ws-panel home-metric">
-      <span className="entry-icon" data-kind={kind}><Icon size={19} aria-hidden="true" /></span>
-      <span><strong>{value}</strong><span>{title}</span></span>
-      <ArrowUpRight className="home-metric-arrow" size={16} aria-hidden="true" />
-    </Link>)}</div>
+    <WorkspaceHeading title="Hoje" description={date ? `${name ? `Olá, ${name}. ` : ''}${date}` : undefined} action={
+      <RecordLink href="/tasks#novo" className="orbit-button orbit-button--secondary"><Plus size={17} aria-hidden="true" />Nova tarefa</RecordLink>
+    } />
+    <LocalImport prominent />
+    {firstUse && <section className="ws-panel settings-info today-first">
+      <div><h2>Organize seu primeiro compromisso</h2><p>Adicione uma disciplina e uma tarefa ou prova para começar a usar sua agenda.</p></div>
+      <Link href="/onboarding" className="orbit-button orbit-button--primary">Começar organização</Link>
+    </section>}
     <div className="home-layout">
-      <section className="ws-panel home-agenda" aria-labelledby="home-agenda">
-        <div className="ws-section-head"><div><h2 id="home-agenda">Próximos compromissos</h2></div><Link href="/calendar" className="ws-text-link">Ver calendário <ArrowUpRight size={15} aria-hidden="true" /></Link></div>
-        {upcoming.length ? <ul className="entry-list">{upcoming.map(item => {
-          const Icon = entryIcons[item.kind];
-          return <li key={item.id}><Link className="entry-row entry-row-link" href={entryRoutes[item.kind]}>
-            <span className="entry-icon" data-kind={item.kind}><Icon size={17} aria-hidden="true" /></span>
-            <span className="entry-copy"><strong>{item.title}</strong><small>{subjects.find(subject => subject.id === item.subjectId)?.name || entryNames[item.kind]}</small></span>
-            <time className="entry-date" dateTime={item.date}>{item.date === today ? 'Hoje' : displayDate(item.date)}</time>
-          </Link></li>;
-        })}</ul> : <BlankSlate icon={CalendarDays} title="Nenhum compromisso agendado" description="Provas, tarefas com prazo e eventos aparecem aqui." action={<Link href="/calendar" className="orbit-button orbit-button--secondary">Abrir calendário</Link>} />}
-      </section>
-      <section className="ws-panel home-focus" aria-labelledby="home-focus">
-        <h2 id="home-focus"><Timer size={18} aria-hidden="true" /> Pomodoro</h2>
-        <div className="home-focus-reading"><strong>{focus ? (focus.endsAt ? 'Em andamento' : 'Pausado') : `${focusMinutes} min`}</strong><p>{focus?.mode === 'break' ? 'Pausa' : 'Sessão de foco'}</p></div>
-        <Link className="orbit-button orbit-button--secondary" href="/pomodoro"><Play size={16} aria-hidden="true" /> Abrir cronômetro</Link>
-      </section>
+      <div className="home-sidebar">
+        <TaskQueue items={urgent} overdue onComplete={complete} />
+        <section className="ws-panel home-agenda" aria-label="Agenda de hoje">
+          <div className="ws-section-head"><h2>Agenda de hoje</h2><Link href="/calendar" className="ws-text-link">Ver calendário <ArrowUpRight size={15} aria-hidden="true" /></Link></div>
+          {agenda.length ? <ul className="entry-list">{agenda.map(item => {
+            const Icon = agendaIcons[item.type];
+            return <li key={`${item.type}:${item.id}`} className="entry-row today-row">
+              <span className="entry-icon" data-kind={item.type}><Icon size={17} aria-hidden="true" /></span>
+              <div className="entry-copy"><RecordLink href={item.href}>{item.title}</RecordLink>
+                <p>{[agendaLabels[item.type], item.time, item.detail].filter(Boolean).join(' · ')}</p></div>
+              {item.type === 'task' && <Button size="sm" variant="secondary" aria-label={`Concluir ${item.title}`} onClick={() => complete(item.id)}><Check size={15} aria-hidden="true" />Concluir</Button>}
+            </li>;
+          })}</ul> : <p className="today-empty">Nenhum compromisso para hoje.</p>}
+        </section>
+        <TaskQueue items={undated} onComplete={complete} />
+        {nextDeadlines.length > 0 && <section className="ws-panel home-agenda" aria-label="Próximos prazos">
+          <div className="ws-section-head"><h2>Próximos prazos</h2><Link href="/calendar" className="ws-text-link">Ver calendário</Link></div>
+          <ul className="entry-list">{nextDeadlines.map(item => {
+            const Icon = agendaIcons[item.kind];
+            return <li key={item.id} className="entry-row today-row">
+              <span className="entry-icon" data-kind={item.kind}><Icon size={17} aria-hidden="true" /></span>
+              <div className="entry-copy"><RecordLink href={entryHref(item)}>{item.title}</RecordLink><p>{entryLabels[item.kind]}</p></div>
+              <time className="entry-date" dateTime={item.date}>{displayDate(item.date)}</time>
+            </li>;
+          })}</ul>
+        </section>}
+      </div>
+      <div className="home-sidebar">
+        <section className="ws-panel home-focus" aria-labelledby="home-focus">
+          <h2 id="home-focus"><Timer size={18} aria-hidden="true" /> Foco</h2>
+          <div className="home-focus-reading"><strong>{focus ? (focus.endsAt ? 'Em andamento' : 'Pausado') : `${focusMinutes} min`}</strong>
+            <p>{focus ? focus.mode === 'break' ? 'Pausa' : 'Sessão de foco' : nextFocus?.title ?? 'Sessão de foco'}</p></div>
+          {focus ? <Link className="orbit-button orbit-button--secondary" href="/pomodoro">Abrir cronômetro</Link>
+            : <Button variant="secondary" onClick={() => startFocus('focus', Date.now(), { entryId: nextFocus?.id })}><Play size={16} aria-hidden="true" />Iniciar foco</Button>}
+          {nextStudy && <RecordLink className="ws-text-link" href={`/ai#bloco-${nextStudy.id}`}>Próximo estudo · {displayDate(nextStudy.date)} às {timeLabel(nextStudy.start)}</RecordLink>}
+        </section>
+        <section className="ws-panel settings-info home-next-class">
+          <div className="ws-section-head"><h2>Próxima aula</h2><Link className="ws-text-link" href="/schedule">Ver horários</Link></div>
+          {nextClass ? <div className="entry-row">
+            <span className="entry-icon"><Clock size={18} aria-hidden="true" /></span>
+            <div className="entry-copy"><strong>{nextClass.subject}</strong>
+              <p>{[displayDate(nextClass.date), nextClass.startsAt, nextClass.location].filter(Boolean).join(' · ')}</p></div>
+          </div> : <p>Nenhuma aula agendada.</p>}
+        </section>
+      </div>
     </div>
-    <section className="ws-panel week-panel" aria-labelledby="week-title">
-      <div className="ws-section-head"><div><h2 id="week-title">Próximos 7 dias</h2><p>Compromissos por dia</p></div></div>
-      <ol className="week-days">{week.map(day => <li key={day.key}>
-        <time dateTime={day.key}><span>{day.weekday}</span><strong>{day.dayOfMonth}</strong></time>
-        <span className="week-count" data-has-entries={day.count > 0}>{day.count}<span className="orbit-sr-only"> {day.count === 1 ? 'compromisso' : 'compromissos'}</span></span>
+    {week.length > 0 && <section className="ws-panel week-panel" aria-labelledby="week-title">
+      <div className="ws-section-head"><h2 id="week-title">Próximos 7 dias</h2></div>
+      <ol className="week-days">{week.map(day => <li key={day.date}>
+        <RecordLink href={`/calendar#dia-${day.date}`} aria-label={`${displayDate(day.date)}, ${day.items.length} compromissos`}>
+          <time dateTime={day.date}><span>{new Date(`${day.date}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short' })}</span><strong>{Number(day.date.slice(-2))}</strong></time>
+          <span className="week-count" data-has-entries={day.items.length > 0}>{day.items.length}</span>
+        </RecordLink>
       </li>)}</ol>
-    </section>
-  </div>;
-}
-
-function planDate(item: Entry, today: string) {
-  if (!item.date) return 'Sem prazo';
-  if (item.date === today) return 'Hoje';
-  if (item.date < today) return 'Em atraso';
-  return displayDate(item.date);
-}
-
-export function StudyPlan() {
-  const { entries, subjects } = useWorkspace();
-  const today = useLocalDate();
-  const plan = entries.filter(item => (item.kind === 'exam' && item.date >= today) || (item.kind === 'task' && !item.done)).sort(byDate).slice(0, 5);
-
-  return <div className="ws-page">
-    <WorkspaceHeading title="Plano de estudos" description="Prioridades organizadas pelos prazos das suas tarefas e provas." />
-    <section className="ws-panel plan-panel" aria-label="Prioridades de estudo">
-      {plan.length ? <ol className="plan-list">{plan.map((item, index) => {
-        const Icon = entryIcons[item.kind];
-        return <li key={item.id} className="plan-step">
-          <span className="plan-step-number" aria-hidden="true">{index + 1}</span>
-          <Link href={entryRoutes[item.kind]}>
-            <span className="entry-icon" data-kind={item.kind}><Icon size={19} aria-hidden="true" /></span>
-            <span className="entry-copy"><strong>{item.title}</strong><small>{[entryNames[item.kind], subjects.find(subject => subject.id === item.subjectId)?.name].filter(Boolean).join(' · ')}</small></span>
-            <span className="entry-date" data-overdue={Boolean(item.date && item.date < today)}>{planDate(item, today)}</span>
-            <ArrowUpRight size={16} aria-hidden="true" />
-          </Link>
-        </li>;
-      })}</ol> : <BlankSlate icon={ListTodo} title="Seu plano ainda não tem itens" description="Adicione uma tarefa pendente ou uma prova futura para ver suas prioridades." action={<Link href="/tasks" className="orbit-button orbit-button--secondary">Abrir tarefas</Link>} />}
-    </section>
+    </section>}
   </div>;
 }
 
 export function Statistics() {
-  const { entries, sessions } = useWorkspace();
+  const { entries, sessions, subjects } = useWorkspace();
   const today = useLocalDate();
   const tasks = entries.filter(item => item.kind === 'task');
   const completed = tasks.filter(item => item.done).length;
@@ -114,6 +135,13 @@ export function Statistics() {
       minutes: Math.floor(daySessions.reduce((sum, session) => sum + session.seconds, 0) / 60), count: daySessions.length,
     };
   }) : [];
+  const recentDates = new Set(recent.map(day => day.date));
+  const bySubject = new Map<string, number>();
+  for (const session of sessions) {
+    if (!recentDates.has(localDate(new Date(session.endedAt)))) continue;
+    const key = session.subjectId || '';
+    bySubject.set(key, (bySubject.get(key) ?? 0) + session.seconds);
+  }
   const minutes = recent.reduce((sum, day) => sum + day.minutes, 0);
   const count = recent.reduce((sum, day) => sum + day.count, 0);
   const peak = Math.max(1, ...recent.map(day => day.minutes));
@@ -137,5 +165,11 @@ export function Statistics() {
         <Link href="/tasks" className="ws-text-link">Ver tarefas <ArrowUpRight size={15} aria-hidden="true" /></Link>
       </section>
     </div>
+    {bySubject.size > 0 && <section className="ws-panel settings-info">
+      <div className="ws-section-head"><div><h2>Tempo de foco por disciplina</h2><p>Últimos 7 dias</p></div></div>
+      <ul className="entry-list">{[...bySubject].sort((a, b) => b[1] - a[1]).map(([id, seconds]) => <li className="entry-row statistic-subject-row" key={id || 'unlinked'}>
+        <div className="entry-copy"><strong>{subjects.find(item => item.id === id)?.name ?? 'Sem disciplina'}</strong></div><span>{Math.floor(seconds / 60)} min</span>
+      </li>)}</ul>
+    </section>}
   </div>;
 }

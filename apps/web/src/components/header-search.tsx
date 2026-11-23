@@ -1,15 +1,14 @@
 'use client';
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
-import Link from 'next/link';
+import { RecordLink } from '@/features/workspace/presentation';
 import { ArrowUpRight, Search } from 'lucide-react';
 import { SearchInput } from '@orbit/design-system';
 import { navigation } from '@/features/workspace/navigation';
 import { useWorkspace } from '@/features/workspace/store';
+import { entryHref, entryLabels } from '@/features/workspace/records';
 
 const normalize = (value: string) => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
-const entryRoutes = { task: '/tasks', exam: '/exams', event: '/calendar' };
-const entryNames = { task: 'Tarefa', exam: 'Prova', event: 'Evento' };
 
 export function HeaderSearch() {
   const { subjects, entries } = useWorkspace();
@@ -20,8 +19,8 @@ export function HeaderSearch() {
   const term = normalize(query);
   const searchable = [
     ...navigation.map(item => ({ id: item.href, title: item.label, href: item.href, type: 'Tela' })),
-    ...subjects.map(item => ({ id: item.id, title: item.name, href: '/subjects', type: 'Disciplina' })),
-    ...entries.map(item => ({ id: item.id, title: item.title, href: entryRoutes[item.kind], type: entryNames[item.kind] })),
+    ...subjects.map(item => ({ id: item.id, title: item.name, href: `/subjects#editar-${item.id}`, type: 'Disciplina' })),
+    ...entries.map(item => ({ id: item.id, title: item.title, href: entryHref(item), type: entryLabels[item.kind] })),
   ];
   const matches = searchable.filter(item => normalize(item.title).includes(term)).slice(0, 7);
   const showResults = focused && Boolean(term);
@@ -61,9 +60,9 @@ export function HeaderSearch() {
     <span className="search-hint" aria-hidden="true"><kbd>Ctrl</kbd><kbd>K</kbd></span>
     {showResults && <div className="header-popover search-results">
       <p id={summaryId} role="status">{matches.length ? `${matches.length} ${matches.length === 1 ? 'resultado' : 'resultados'}` : 'Nenhum resultado encontrado'}</p>
-      {matches.length ? <ul>{matches.map(item => <li key={item.id}><Link href={item.href} onClick={() => { setQuery(''); setFocused(false); }}>
+      {matches.length ? <ul>{matches.map(item => <li key={item.id}><RecordLink href={item.href} onClick={() => { setQuery(''); setFocused(false); }}>
         <span><strong>{item.title}</strong><small>{item.type}</small></span><ArrowUpRight size={16} aria-hidden="true" />
-      </Link></li>)}</ul> : <p className="search-empty"><Search size={16} aria-hidden="true" /> Busque pelo nome de uma matéria, tarefa ou tela.</p>}
+      </RecordLink></li>)}</ul> : <p className="search-empty"><Search size={16} aria-hidden="true" /> Busque pelo nome de uma matéria, tarefa ou tela.</p>}
     </div>}
   </div>;
 }

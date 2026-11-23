@@ -3,12 +3,12 @@ import { EventEmitter } from 'node:events';
 import { test, mock } from 'node:test';
 import { LoggingMiddleware } from '../dist/common/middleware/logging.middleware.js';
 
-test('logging supports raw HTTP requests, redacts secrets and logs completion only once', () => {
+test('logging supports raw HTTP requests, omits request metadata and logs completion only once', () => {
   const logger = { log: mock.fn() };
   const middleware = new LoggingMiddleware(logger);
   const req = {
     method: 'GET',
-    url: '/api/v1/health',
+    url: '/api/v1/health?secret=private',
     requestId: 'test-request',
     socket: { remoteAddress: '127.0.0.1' },
     headers: {
@@ -27,13 +27,10 @@ test('logging supports raw HTTP requests, redacts secrets and logs completion on
   res.emit('close');
   assert.equal(logger.log.mock.callCount(), 1);
   const [message, context] = logger.log.mock.calls[0].arguments;
-  assert.equal(message, 'GET /api/v1/health 200');
+  assert.equal(message, 'HTTP request completed');
   assert.equal(context.requestId, 'test-request');
-  assert.equal(context.ip, '127.0.0.1');
-  assert.equal(context.userAgent, 'test-client');
+  assert.equal(context.method, 'GET');
+  assert.equal(context.statusCode, 200);
   assert.ok(context.durationMs >= 0);
-  assert.equal(context.headers.authorization, '[REDACTED]');
-  assert.equal(context.headers.cookie, '[REDACTED]');
-  assert.equal(context.headers['X-CSRF-Token'], '[REDACTED]');
-  assert.equal(context.headers.accept, 'application/json, text/plain');
+  assert.deepEqual(Object.keys(context).sort(), ['durationMs', 'method', 'requestId', 'statusCode']);
 });

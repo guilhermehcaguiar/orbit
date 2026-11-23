@@ -14,6 +14,8 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "build:deploy": "npm run build --workspace @orbit/api && npm run build --workspace @orbit/web -- --webpack",
+    "start:deploy": "node scripts/start-deploy.mjs",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test"

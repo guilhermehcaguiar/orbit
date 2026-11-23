@@ -67,3 +67,7 @@
   .orbit-section-title { gap: var(--orbit-space-2); }
   .orbit-section-title p { max-width: 15rem; }
 }
+
+@media (max-width: 600px) {
+  .header-search .search-hint { display: none; }
+}

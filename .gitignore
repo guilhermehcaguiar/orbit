@@ -56,3 +56,7 @@ $RECYCLE.BIN/
 # Temporary files
 *.tmp
 *.temp
+
+# Playwright artifacts
+playwright-report/
+test-results/

@@ -18,7 +18,8 @@ async function bootstrap(): Promise<void> {
   await configureApp(app);
   app.enableShutdownHooks();
   const config = app.get(ConfigService<ApiEnvironment, true>);
-  await app.listen(config.get('API_PORT', { infer: true }), '0.0.0.0');
+  const host = process.env.ORBIT_API_LOOPBACK === '1' ? '127.0.0.1' : '0.0.0.0';
+  await app.listen(config.get('API_PORT', { infer: true }), host);
 }
 
 bootstrap().catch((error: unknown) => {

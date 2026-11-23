@@ -2,8 +2,9 @@ import type { NavigationIcon } from '@/constants/icons';
 
 export interface NavigationEntry { label: string; href: string; icon: NavigationIcon; group: 'study' | 'account' }
 export const navigation: NavigationEntry[] = [
-  { label: 'Início', href: '/app', icon: 'home', group: 'study' },
+  { label: 'Hoje', href: '/app', icon: 'home', group: 'study' },
   { label: 'Calendário', href: '/calendar', icon: 'calendar', group: 'study' },
+  { label: 'Semestres e horários', href: '/schedule', icon: 'calendar', group: 'study' },
   { label: 'Disciplinas', href: '/subjects', icon: 'subjects', group: 'study' },
   { label: 'Tarefas', href: '/tasks', icon: 'tasks', group: 'study' },
   { label: 'Provas', href: '/exams', icon: 'exams', group: 'study' },

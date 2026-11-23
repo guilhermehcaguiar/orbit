@@ -33,7 +33,7 @@ export default function Home() {
               <Link href="/app" className="orbit-button orbit-button--primary">Abrir meu espaço <ArrowUpRight size={18} aria-hidden="true" /></Link>
               <a href="#recursos" className="orbit-button orbit-button--secondary">Ver ferramentas <ArrowDown size={16} aria-hidden="true" /></a>
             </div>
-            <p className="landing-local"><Check size={16} aria-hidden="true" /> Sem cadastro. Seus registros ficam no navegador.</p>
+            <p className="landing-local"><Check size={16} aria-hidden="true" /> Use como visitante ou entre para sincronizar seus registros.</p>
           </div>
           <ProductPreview />
         </div>

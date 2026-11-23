@@ -8,6 +8,7 @@
     "dev": {
       "cache": false,
       "persistent": true,
+      "passThroughEnv": ["ORBIT_API_URL", "ORBIT_WEB_ORIGIN"],
       "env": [
         "API_PORT",
         "FRONTEND_URL",
@@ -48,9 +49,6 @@
       ]
     },
     "test": {
-      "dependsOn": [
-        "build"
-      ],
       "outputs": [],
       "env": [
         "API_PORT",

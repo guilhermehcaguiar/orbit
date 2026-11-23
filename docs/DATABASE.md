@@ -6,7 +6,7 @@
 - `created_at`, `updated_at` em tabelas mutáveis.
 - timestamps em UTC.
 - `user_id` em todas as entidades pertencentes ao usuário.
-- RLS obrigatório nas tabelas de usuário antes de receber dados reais. O schema atual de demonstração ainda não implementa RLS.
+- RLS obrigatório nas tabelas de usuário antes de receber dados reais. As migrations do workspace habilitam RLS e o forçam nas tabelas de perfil e acadêmicas.
 - enums preferencialmente modelados como texto validado ou enum de banco quando estável.
 
 ## Camada de Persistência (etapa 3B)
@@ -46,8 +46,23 @@ o arquivo de configuração tem um fallback para o banco `orbit` em
 
 Um operador autorizado executa migrations separadamente, fora do build e do start. No Neon, use uma URL direta com `sslmode=verify-full` e papel de migração. Confirme a branch e o banco antes de aplicar. Interrompa a execução se a variável estiver ausente ou vazia em ambiente hospedado. Consulte o [runbook](DEPLOYMENT.md).
 
+### Workspace autenticado
+
+As migrations `0001_academic_workspace` e `0002_workspace_isolation` adicionam
+credenciais, sessões e as tabelas acadêmicas. Cada registro acadêmico tem
+`user_id`, identificador, posição e o conteúdo JSONB validado pelo contrato
+compartilhado. Preferências, foco ativo e plano semanal ficam em
+`workspace_preferences`, que também mantém a revisão usada nas gravações.
+
+O acesso acadêmico usa transações com a identidade da sessão em
+`orbit.user_id`, definida somente para a transação. As políticas RLS usam
+esse valor para leitura e escrita. O código também filtra pelo identificador
+da conta. Credenciais e sessões são tabelas internas, consultadas somente
+pelos fluxos de cadastro, login e validação do token. O runtime usa o papel
+restrito descrito no [runbook](DEPLOYMENT.md).
+
 ### Schema inicial — `profiles`
-Tabela mínima para validar a arquitetura. O chamador fornece o UUID. O schema atual não tem chave estrangeira para identidade nem RLS.
+Tabela de perfil utilizada desde a fundação. O cadastro gera o UUID e cria a credencial associada na mesma transação. A partir da migration 0002, o acesso ao perfil é protegido por RLS.
 
 | Coluna | Tipo | Constraints |
 |--------|------|-------------|
@@ -100,9 +115,9 @@ inicia. Confira tabela, índice e permissões com um smoke diretamente no banco.
 
 No Render, configure `DATABASE_URL` com o pooler, `sslmode=verify-full` e
 um papel de runtime com privilégios mínimos. Guarde a URL direta separadamente
-para migrations. O frontend na Vercel não recebe credenciais de banco.
+para migrations. O launcher repassa `DATABASE_URL` apenas ao processo do NestJS.
 
-## Entidades principais (futuras)
+## Evolução planejada do modelo relacional
 
 ### profiles
 - id (UUID interno associado à futura identidade externa)
@@ -267,11 +282,10 @@ Criar índices para:
 - `material_id` em material_chunks;
 - índice vetorial somente quando RAG for ativado.
 
-## Controle de acesso planejado
+## Controle de acesso
 
-A API valida a sessão e associa a identidade externa ao UUID interno. Aplique
-ownership a leituras e mutações. Projete as políticas RLS a partir dessa
-identidade, limitada à transação quando houver pooling, e teste o isolamento
-entre duas contas com um papel de runtime sem bypass de RLS.
+A API resolve o UUID interno a partir da sessão e aplica ownership a leituras
+e mutações. Os testes de integração validam o isolamento entre duas contas
+com um papel de runtime sem bypass de RLS.
 
 Para entidades filhas sem `user_id`, validar ownership através da entidade pai ou incluir `user_id` para simplificar autorização.

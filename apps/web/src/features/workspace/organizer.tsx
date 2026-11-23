@@ -1,22 +1,26 @@
 'use client';
 
-import Link from 'next/link';
+import { entrySchema, removeEntry, removeSubject } from '@orbit/contracts';
+import { scheduleConflicts } from '@orbit/contracts/planner';
+import { CalendarAgenda } from './calendar-agenda';
 import { useEffect, useState, type FormEvent } from 'react';
-import { ArrowUpRight, BookOpen, CalendarDays, Check, ClipboardList, ListTodo, Pencil, Plus, Trash2 } from 'lucide-react';
+import { BookOpen, CalendarDays, Check, ClipboardList, ListTodo, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Button, IconButton, Input } from '@orbit/design-system';
-import { MonthGrid } from './month-grid';
 import { BlankSlate, EditorDialog, WorkspaceHeading } from './presentation';
 import { byDate, displayDate, useLocalDate, updateWorkspace, useWorkspace, type Entry, type EntryKind, type Subject } from './store';
 
-function useNewRecordShortcut(open: (value: 'new') => void) {
+function useRecordShortcut<T extends { id: string }>(records: T[], open: (value: T | 'new') => void) {
   useEffect(() => {
     let frame: number | undefined;
     const followLink = () => {
-      if (window.location.hash !== '#novo') return;
+      const hash = window.location.hash;
+      const record = hash === '#novo' ? 'new' : hash.startsWith('#editar-')
+        ? records.find(item => item.id === hash.slice(8)) : undefined;
+      if (!record) return;
       window.cancelAnimationFrame(frame ?? 0);
       frame = window.requestAnimationFrame(() => {
         window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
-        open('new');
+        open(record);
       });
     };
     followLink();
@@ -25,7 +29,7 @@ function useNewRecordShortcut(open: (value: 'new') => void) {
       window.cancelAnimationFrame(frame ?? 0);
       window.removeEventListener('hashchange', followLink);
     };
-  }, [open]);
+  }, [open, records]);
 }
 
 function RemoveDialog({ name, description, onRemove, onClose }: {
@@ -44,9 +48,10 @@ function RemoveDialog({ name, description, onRemove, onClose }: {
 }
 
 export function Subjects() {
-  const { subjects, entries } = useWorkspace();
+  const workspace = useWorkspace();
+  const { subjects, entries, semesters } = workspace;
   const [editor, setEditor] = useState<Subject | 'new' | null>(null);
-  useNewRecordShortcut(setEditor);
+  useRecordShortcut(subjects, setEditor);
   const [removing, setRemoving] = useState<Subject | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -65,21 +70,23 @@ export function Subjects() {
       setError('Informe o nome da disciplina.');
       return;
     }
-    const subject = { id: editing?.id ?? crypto.randomUUID(), name, teacher: String(data.get('teacher')).trim() };
+    const subject = { id: editing?.id ?? crypto.randomUUID(), name, teacher: String(data.get('teacher')).trim(), semesterId: String(data.get('semesterId')) };
+    const next = editing ? subjects.map(item => item.id === editing.id ? subject : item) : [...subjects, subject];
+    const updated = { ...workspace, subjects: next };
+    if (workspace.schedules.some(item => item.subjectId === subject.id && scheduleConflicts(updated, item))) {
+      setError('O semestre escolhido cria um conflito entre horários de aula.');
+      return;
+    }
     updateWorkspace(current => ({
       ...current,
-      subjects: editing ? current.subjects.map(item => item.id === editing.id ? subject : item) : [...current.subjects, subject],
+      subjects: next,
     }));
     setNotice(editing ? 'Disciplina atualizada.' : 'Disciplina adicionada.');
     setEditor(null);
   }
 
   function remove(id: string) {
-    updateWorkspace(current => ({
-      ...current,
-      subjects: current.subjects.filter(item => item.id !== id),
-      entries: current.entries.map(item => item.subjectId === id ? { ...item, subjectId: '' } : item),
-    }));
+    updateWorkspace(current => removeSubject(current, id));
     setNotice('Disciplina removida.');
     setRemoving(null);
   }
@@ -100,7 +107,7 @@ export function Subjects() {
               <IconButton label={`Remover ${subject.name}`} onClick={() => setRemoving(subject)}><Trash2 size={17} aria-hidden="true" /></IconButton>
             </div>
           </div>
-          <h2>{subject.name}</h2>{subject.teacher && <p>{subject.teacher}</p>}
+          <h2>{subject.name}</h2>{[subject.teacher, semesters.find(item => item.id === subject.semesterId)?.name].filter(Boolean).length > 0 && <p>{[subject.teacher, semesters.find(item => item.id === subject.semesterId)?.name].filter(Boolean).join(' · ')}</p>}
           <div className="subject-tile-progress">
             <span>{tasks.length ? `${done} de ${tasks.length} tarefas concluídas` : 'Sem tarefas vinculadas'}</span>
             {tasks.length > 0 && <progress value={done} max={tasks.length} aria-label={`Tarefas concluídas em ${subject.name}`} />}
@@ -112,11 +119,14 @@ export function Subjects() {
       <form className="ws-form" onSubmit={save}>
         <Input label="Nome da disciplina" name="name" defaultValue={editing?.name} maxLength={100} required error={error || undefined} onChange={() => setError('')} />
         <Input label="Professor(a)" name="teacher" defaultValue={editing?.teacher} maxLength={100} />
-        <span className="orbit-sr-only" role="alert">{error}</span>
+        <label className="orbit-field"><span className="orbit-label">Semestre</span><select className="orbit-input" name="semesterId" aria-label="Semestre" defaultValue={editing?.semesterId ?? ''}>
+          <option value="">Sem semestre</option>{semesters.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+        </select></label>
+        {error && <p className="ws-form-error" role="alert">{error}</p>}
         <div className="ws-form-actions"><Button variant="secondary" onClick={() => setEditor(null)}>Cancelar</Button><Button type="submit">{editing ? 'Salvar disciplina' : 'Adicionar disciplina'}</Button></div>
       </form>
     </EditorDialog>}
-    {removing && <RemoveDialog name={removing.name} description="Tarefas, provas e eventos vinculados serão mantidos sem disciplina." onClose={() => setRemoving(null)} onRemove={() => remove(removing.id)} />}
+    {removing && <RemoveDialog name={removing.name} description="Tarefas, provas e eventos serão mantidos. Os horários de aula desta disciplina serão removidos." onClose={() => setRemoving(null)} onRemove={() => remove(removing.id)} />}
   </div>;
 }
 
@@ -130,27 +140,29 @@ const examFilters = [{ value: 'all', label: 'Todas' }, { value: 'upcoming', labe
 type Filter = (typeof taskFilters)[number]['value'] | (typeof examFilters)[number]['value'];
 
 export function Organizer({ kind }: { kind: EntryKind }) {
-  const { entries, subjects } = useWorkspace();
+  const workspace = useWorkspace();
+  const { entries, subjects } = workspace;
   const [editor, setEditor] = useState<Entry | 'new' | null>(null);
-  useNewRecordShortcut(setEditor);
+  const records = entries.filter(item => item.kind === kind);
+  useRecordShortcut(records, setEditor);
   const [removing, setRemoving] = useState<Entry | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [selectedMonth, setMonth] = useState('');
   const [selectedDate, setDate] = useState('');
+  const [newDate, setNewDate] = useState('');
   const today = useLocalDate();
   const month = selectedMonth || today.slice(0, 7);
   const editing = editor && editor !== 'new' ? editor : null;
   const words = labels[kind];
   const isCalendar = kind === 'event';
+  const calendarDate = newDate || selectedDate || (month === today.slice(0, 7) ? today : `${month}-01`);
   const filters = kind === 'task' ? taskFilters : examFilters;
-  const monthEntries = entries.filter(item => item.date && item.date.startsWith(month));
-  const items = (isCalendar ? monthEntries.filter(item => !selectedDate || item.date === selectedDate) : entries.filter(item => {
-    if (item.kind !== kind) return false;
+  const items = records.filter(item => {
     if (filter === 'all') return true;
     return kind === 'task' ? item.done === (filter === 'done') : (item.date < today) === (filter === 'past');
-  })).sort(byDate);
+  }).sort(byDate);
 
   function openEditor(value: Entry | 'new') {
     setError('');
@@ -165,10 +177,23 @@ export function Organizer({ kind }: { kind: EntryKind }) {
       setError('Informe um título.');
       return;
     }
-    const entry: Entry = {
+    const time = String(data.get('time') ?? '') || undefined;
+    const duration = String(data.get('durationMinutes') ?? '');
+    const effort = String(data.get('effortMinutes') ?? '');
+    const preparation = String(data.get('preparation') ?? '');
+    const record = entrySchema.safeParse({
       id: editing?.id ?? crypto.randomUUID(), kind, title,
       date: String(data.get('date')), subjectId: String(data.get('subjectId')), done: false,
-    };
+      time, durationMinutes: time ? Number(duration) : undefined,
+      effortMinutes: effort ? Number(effort) : undefined,
+      preparation: preparation ? Number(preparation) : undefined,
+      priority: data.get('priority') ?? undefined,
+    });
+    if (!record.success) {
+      setError('Confira a data, a hora e a duração. O compromisso deve terminar no mesmo dia.');
+      return;
+    }
+    const entry = record.data;
     updateWorkspace(current => {
       const valid = { ...entry, subjectId: current.subjects.some(subject => subject.id === entry.subjectId) ? entry.subjectId : '' };
       return { ...current, entries: editing ? current.entries.map(item => item.id === editing.id ? { ...valid, done: item.done } : item) : [...current.entries, valid] };
@@ -180,11 +205,12 @@ export function Organizer({ kind }: { kind: EntryKind }) {
       setFilter('all');
     }
     setNotice(editing ? 'Registro atualizado.' : 'Registro adicionado.');
+    setNewDate('');
     setEditor(null);
   }
 
   function remove(id: string) {
-    updateWorkspace(current => ({ ...current, entries: current.entries.filter(item => item.id !== id) }));
+    updateWorkspace(current => removeEntry(current, id));
     setNotice('Registro removido.');
     setRemoving(null);
   }
@@ -196,14 +222,13 @@ export function Organizer({ kind }: { kind: EntryKind }) {
 
   const list = <section className="ws-panel entry-panel" aria-labelledby="entry-list-title">
     <div className="ws-section-head">
-      <div><h2 id="entry-list-title">{isCalendar ? selectedDate ? displayDate(selectedDate) : 'Compromissos do mês' : kind === 'task' ? 'Suas tarefas' : 'Suas provas'}</h2>
+      <div><h2 id="entry-list-title">{kind === 'task' ? 'Suas tarefas' : 'Suas provas'}</h2>
         {items.length > 0 && <p>{items.length} {items.length === 1 ? 'registro' : 'registros'}</p>}</div>
-      {isCalendar && selectedDate && <Button size="sm" variant="ghost" onClick={() => setDate('')}>Ver mês inteiro</Button>}
       {!isCalendar && <div className="ws-segment" aria-label={`Filtrar ${words.title.toLowerCase()}`} role="group">
         {filters.map(option => <button key={option.value} type="button" aria-pressed={filter === option.value} onClick={() => setFilter(option.value)}>{option.label}</button>)}
       </div>}
     </div>
-    {items.length === 0 ? <BlankSlate icon={words.icon} title={isCalendar ? 'Sem compromissos neste período' : kind === 'task' ? 'Nenhuma tarefa nesta lista' : 'Nenhuma prova nesta lista'} action={filter === 'all' && <Button variant="secondary" onClick={() => openEditor('new')}>{words.create}</Button>} /> :
+    {items.length === 0 ? <BlankSlate icon={words.icon} title={kind === 'task' ? 'Nenhuma tarefa nesta lista' : 'Nenhuma prova nesta lista'} action={filter === 'all' && <Button variant="secondary" onClick={() => openEditor('new')}>{words.create}</Button>} /> :
       <ul className="entry-list">{items.map(item => {
         const subject = subjects.find(subject => subject.id === item.subjectId);
         const Icon = labels[item.kind].icon;
@@ -211,34 +236,44 @@ export function Organizer({ kind }: { kind: EntryKind }) {
         return <li key={item.id} className={item.done ? 'entry-row entry-done' : 'entry-row'}>
           {kind === 'task' ? <button className="task-toggle" aria-pressed={item.done} aria-label={`${item.done ? 'Reabrir' : 'Concluir'} ${item.title}`} onClick={() => toggle(item)} type="button">{item.done && <Check size={16} aria-hidden="true" />}</button> :
             <span className="entry-icon" data-kind={item.kind}><Icon size={19} aria-hidden="true" /></span>}
-          <div className="entry-copy"><strong>{item.title}</strong><p>{[isCalendar ? labels[item.kind].singular : '', subject?.name].filter(Boolean).join(' · ') || 'Sem disciplina'}</p></div>
-          <div className="entry-date" data-overdue={Boolean(due)}><span>{displayDate(item.date)}</span>{due ? <small>Em atraso</small> : item.done ? <small>Concluída</small> : null}</div>
+          <div className="entry-copy"><strong>{item.title}</strong><p>{subject?.name || 'Sem disciplina'}</p></div>
+          <div className="entry-date" data-overdue={Boolean(due)}><span>{displayDate(item.date)}{item.time && ` · ${item.time}`}</span>{due ? <small>Em atraso</small> : item.done ? <small>Concluída</small> : null}</div>
           <div className="ws-icon-actions">
-            {kind === item.kind ? <>
-              <IconButton label={`Editar ${item.title}`} onClick={() => openEditor(item)}><Pencil size={16} aria-hidden="true" /></IconButton>
-              <IconButton label={`Remover ${item.title}`} onClick={() => setRemoving(item)}><Trash2 size={16} aria-hidden="true" /></IconButton>
-            </> : <Link className="entry-link" href={item.kind === 'task' ? '/tasks' : '/exams'} aria-label={`Abrir ${item.title} em ${labels[item.kind].title.toLowerCase()}`}><ArrowUpRight size={17} aria-hidden="true" /></Link>}
+            <IconButton label={`Editar ${item.title}`} onClick={() => openEditor(item)}><Pencil size={16} aria-hidden="true" /></IconButton>
+            <IconButton label={`Remover ${item.title}`} onClick={() => setRemoving(item)}><Trash2 size={16} aria-hidden="true" /></IconButton>
           </div>
         </li>;
       })}</ul>}
   </section>;
 
   return <div className="ws-page">
-    <WorkspaceHeading title={words.title} description={isCalendar ? 'Tarefas, provas e eventos no mesmo calendário.' : kind === 'task' ? 'Organize o que precisa fazer e acompanhe os prazos.' : 'Acompanhe as avaliações por data e disciplina.'} action={<Button onClick={() => openEditor('new')} icon={<Plus size={17} aria-hidden="true" />}>{words.create}</Button>} />
+    <WorkspaceHeading title={words.title} description={isCalendar ? 'Aulas, prazos e sessões de estudo na mesma agenda.' : kind === 'task' ? 'Organize o que precisa fazer e acompanhe os prazos.' : 'Acompanhe as avaliações por data e disciplina.'} action={<Button onClick={() => { setNewDate(''); openEditor('new'); }} icon={<Plus size={17} aria-hidden="true" />}>{words.create}</Button>} />
     <span className="orbit-sr-only" role="status">{notice}</span>
-    {isCalendar ? <div className="calendar-layout">
-      <MonthGrid month={month} today={today} entries={monthEntries} selection={selectedDate} onDate={date => setDate(current => current === date ? '' : date)} onMonth={value => { setMonth(value); setDate(''); }} />
-      {list}
-    </div> : list}
+    {isCalendar ? <CalendarAgenda workspace={workspace} today={today} date={selectedDate} month={month}
+      onDate={setDate} onMonth={value => { setMonth(value); setDate(''); }}
+      onCreate={date => { setNewDate(date); openEditor('new'); }} /> : list}
     {editor && <EditorDialog title={editing ? `Editar ${words.singular}` : words.create} onClose={() => setEditor(null)} focusField>
       <form className="ws-form" onSubmit={save}>
         <Input label="Título" name="title" defaultValue={editing?.title} maxLength={140} required error={error || undefined} onChange={() => setError('')} />
-        <Input label={words.date} name="date" type="date" defaultValue={editing?.date ?? (isCalendar ? selectedDate : '')} required={kind !== 'task'} />
-        <label className="orbit-field"><span className="orbit-label">Disciplina</span><select className="orbit-input" name="subjectId" defaultValue={editing?.subjectId ?? ''}>
+        <Input label={words.date} name="date" type="date" defaultValue={editing?.date ?? (isCalendar ? calendarDate : '')} required={kind !== 'task'} />
+        <label className="orbit-field"><span className="orbit-label">Disciplina</span><select className="orbit-input" name="subjectId" aria-label="Disciplina" defaultValue={editing?.subjectId ?? ''}>
           <option value="">Sem disciplina</option>{subjects.map(subject => <option value={subject.id} key={subject.id}>{subject.name}</option>)}
         </select></label>
-        <span className="orbit-sr-only" role="alert">{error}</span>
-        <div className="ws-form-actions"><Button variant="secondary" onClick={() => setEditor(null)}>Cancelar</Button><Button type="submit">{editing ? 'Salvar alterações' : `Adicionar ${words.singular}`}</Button></div>
+        {kind !== 'task' && <div className="ws-form-pair">
+          <Input label="Horário" name="time" type="time" defaultValue={editing?.time} />
+          <Input label="Duração (min)" name="durationMinutes" type="number" defaultValue={editing?.durationMinutes ?? 60} min="1" max="720" />
+        </div>}
+        {kind !== 'event' && <div className="ws-form-pair">
+          <Input label="Tempo de estudo estimado (min)" name="effortMinutes" type="number" defaultValue={editing?.effortMinutes} min="1" max="720" />
+          {kind === 'exam' ? <Input label="Nível de preparo (%)" name="preparation" type="number" defaultValue={editing?.preparation} min="0" max="100" /> :
+            <label className="orbit-field"><span className="orbit-label">Prioridade</span><select className="orbit-input" name="priority" defaultValue={editing?.priority ?? 'normal'}>
+              <option value="low">Baixa</option><option value="normal">Normal</option><option value="high">Alta</option>
+            </select></label>}
+        </div>}
+        {error && <p className="ws-form-error" role="alert">{error}</p>}
+        <div className="ws-form-actions">
+          {isCalendar && editing && <Button variant="ghost" onClick={() => { setEditor(null); setRemoving(editing); }}>Remover evento</Button>}
+          <Button variant="secondary" onClick={() => { setEditor(null); setNewDate(''); }}>Cancelar</Button><Button type="submit">{editing ? 'Salvar alterações' : `Adicionar ${words.singular}`}</Button></div>
       </form>
     </EditorDialog>}
     {removing && <RemoveDialog name={removing.title} onClose={() => setRemoving(null)} onRemove={() => remove(removing.id)} />}
